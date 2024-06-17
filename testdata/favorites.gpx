@@ -22,11 +22,11 @@ Tent Friendly: No
 	</desc>
         <type>Informal Campsite</type>
         <extensions>
-            <osmand:icon>tourism_camp_site</osmand:icon>
-            <osmand:background>circle</osmand:background>
-            <osmand:color>#ff2ec6ff</osmand:color>
-            <osmand:amenity_subtype>user_defined_other_postcode</osmand:amenity_subtype>
-            <osmand:amenity_type>user_defined_other</osmand:amenity_type>
+            <icon>tourism_camp_site</icon>
+            <background>circle</background>
+            <color>#ffff80ff</color>
+            <amenity_subtype>user_defined_other_postcode</amenity_subtype>
+            <amenity_type>user_defined_other</amenity_type>
         </extensions>
     </wpt>
     <extensions>
