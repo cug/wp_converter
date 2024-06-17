@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"log"
 	"os"
 )
@@ -29,6 +28,11 @@ type OAGpxMetadata struct {
 	GMTime  string   `xml:"time"`
 }
 
+type OAGpxExtensions struct {
+	XMLName      xml.Name       `xml:"extensions"`
+	PointsGroups OAPointsGroups `xml:"osmand:points_groups"`
+}
+
 type OAWpt struct {
 	XMLName       xml.Name        `xml:"wpt"`
 	WptLat        string          `xml:"lat,attr"`
@@ -41,9 +45,13 @@ type OAWpt struct {
 	WptExtensions OAWptExtensions `xml:"extensions"`
 }
 
-type OAGpxExtensions struct {
-	XMLName      xml.Name       `xml:"extensions"`
-	PointsGroups OAPointsGroups `xml:"osmand:points_groups"`
+type OAWptExtensions struct {
+	XMLName          xml.Name `xml:"extensions"`
+	WEIcon           string   `xml:"osmand:icon"`
+	WEBackground     string   `xml:"osmand:background"`
+	WEColor          string   `xml:"osmand:color"`
+	WEAmenitySubtype string   `xml:"osmand:amenity_subtype"`
+	WEAmenityType    string   `xml:"osmand:amenity_type"`
 }
 
 type OAPointsGroups struct {
@@ -59,51 +67,8 @@ type OAGroup struct {
 	GName       string   `xml:"name,attr"`
 }
 
-type OAWptExtensions struct {
-	XMLName          xml.Name `xml:"extensions"`
-	WEIcon           string   `xml:"osmand:icon"`
-	WEBackground     string   `xml:"osmand:background"`
-	WEColor          string   `xml:"osmand:color"`
-	WEAmenitySubtype string   `xml:"osmand:amenity_subtype"`
-	WEAmenityType    string   `xml:"osmand:amenity_type"`
-}
-
 func main() {
-	if os.Args[1] == "read" {
-		read()
-	} else {
-		write()
-	}
-}
-
-func read() {
-	// Open our xmlFile
-	xmlFile, err := os.Open(os.Args[2])
-	// if we os.Open returns an error then handle it
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println("Successfully Opened xml file")
-	// defer the closing of our xmlFile so that we can parse it later on
-	defer xmlFile.Close()
-
-	byteValue, _ := io.ReadAll(io.Reader(xmlFile))
-	var gpx OAGpx
-
-	uErr := xml.Unmarshal(byteValue, &gpx)
-	if uErr != nil {
-		fmt.Println(uErr)
-		os.Exit(-1)
-	}
-
-	for i := 0; i < len(gpx.Waypoints); i++ {
-		fmt.Println("Waypoint Name: " + gpx.Waypoints[i].WptName)
-		fmt.Println("Waypoint Desc: " + gpx.Waypoints[i].WptDesc)
-		fmt.Println("Waypoint Position: " + gpx.Waypoints[i].WptLat + ", " + gpx.Waypoints[i].WptLon)
-		fmt.Println("Icon: " + gpx.Waypoints[i].WptExtensions.WEIcon)
-		fmt.Println("Background: " + gpx.Waypoints[i].WptExtensions.WEBackground)
-	}
+	write()
 }
 
 func write() {
@@ -155,7 +120,7 @@ func write() {
 }
 
 func readCsvFile() []OAWpt {
-	f, err := os.Open(os.Args[2])
+	f, err := os.Open(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
