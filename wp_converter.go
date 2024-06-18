@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 type OAGpx struct {
@@ -67,79 +68,7 @@ type OAGroup struct {
 	GName       string   `xml:"name,attr"`
 }
 
-func main() {
-	write()
-}
-
-func write() {
-
-	// TODO: Make the groups dynamic based on the data in the file
-
-	gpx := OAGpx{
-		Version:    "OsmAnd 4.6.6",
-		Creator:    "OsmAnd Maps 4.6.6 (4.6.6.1)",
-		BaseNS:     "http://www.topografix.com/GPX/1/1",
-		OsmNS:      "https://osmand.net",
-		Namepace:   "http://www.garmin.com/xmlschemas/TrackPointExtension/v1",
-		Xsi:        "http://www.w3.org/2001/XMLSchema-instance",
-		XsiLocaton: "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd",
-		Waypoints:  readCsvFile(),
-		Metadata: OAGpxMetadata{
-			Name:   "favories",
-			GMTime: "1970-01-01T08:00:00Z",
-		},
-		Extensions: OAGpxExtensions{
-			PointsGroups: OAPointsGroups{
-				Group: []OAGroup{
-					{
-						GIcon:       "tourism_camp_site",
-						GBackground: "circle",
-						GColor:      "#ffff0000",
-						GName:       "Informal Campsite",
-					},
-					{
-						GIcon:       "tourism_camp_site",
-						GBackground: "circle",
-						GColor:      "#ffff0000",
-						GName:       "",
-					},
-					{
-						GIcon:       "tourism_camp_site",
-						GBackground: "circle",
-						GColor:      "#ffff0000",
-						GName:       "Established Campground",
-					},
-				},
-			},
-		},
-	}
-	xmlData, err := xml.MarshalIndent(gpx, "", " ")
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		return
-	}
-	fmt.Printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n%s\n", xmlData)
-}
-
-func readCsvFile() []OAWpt {
-	f, err := os.Open(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// remember to close the file at the end of the program
-	defer f.Close()
-
-	// read csv values using csv.Reader
-	csvReader := csv.NewReader(f)
-	data, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return convertLinesToWaypoints(data)
-}
-
+// Constants for CSV fields
 const id = "Id"
 const location = "Location"
 const name = "Name"
@@ -178,8 +107,87 @@ const evCharging = "Electric vehicle charging"
 const compostSawdust = "Composting sawdust"
 const recCenter = "Recycling center"
 
-func field(s string) int {
+func main() {
+	// TODO: read args here and then call the appropriate function or
+	// fail the call to the app
 
+	write()
+}
+
+func write() {
+
+	// TODO: Make the groups dynamic based on the data in the file
+
+	gpx := OAGpx{
+		Version:    "OsmAnd 4.6.6",
+		Creator:    "OsmAnd Maps 4.6.6 (4.6.6.1)",
+		BaseNS:     "http://www.topografix.com/GPX/1/1",
+		OsmNS:      "https://osmand.net",
+		Namepace:   "http://www.garmin.com/xmlschemas/TrackPointExtension/v1",
+		Xsi:        "http://www.w3.org/2001/XMLSchema-instance",
+		XsiLocaton: "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd",
+		Waypoints:  readWaypoints(),
+		Metadata: OAGpxMetadata{
+			Name:   "favories",
+			GMTime: "1970-01-01T08:00:00Z",
+		},
+		Extensions: OAGpxExtensions{
+			PointsGroups: OAPointsGroups{
+				Group: []OAGroup{
+					{
+						GIcon:       "tourism_camp_site",
+						GBackground: "circle",
+						GColor:      "#ffff0000",
+						GName:       "Informal Campsite",
+					},
+					{
+						GIcon:       "tourism_camp_site",
+						GBackground: "circle",
+						GColor:      "#ffff0000",
+						GName:       "",
+					},
+					{
+						GIcon:       "tourism_camp_site",
+						GBackground: "circle",
+						GColor:      "#ffff0000",
+						GName:       "Established Campground",
+					},
+				},
+			},
+		},
+	}
+	xmlData, err := xml.MarshalIndent(gpx, "", " ")
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+	fmt.Printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n%s\n", xmlData)
+}
+
+func readWaypoints() []OAWpt {
+	// TODO: Clean this up into separate functions to open file, read CSV and then
+	// decode into useful data
+
+	f, err := os.Open(os.Args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// remember to close the file at the end of the program
+	defer f.Close()
+
+	// read csv values using csv.Reader
+	csvReader := csv.NewReader(f)
+	data, err := csvReader.ReadAll()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return convertLinesToWaypoints(data)
+}
+
+func field(s string) int {
+	// TODO: Make sure, all exports have same fields
 	var fields = map[string]int{
 		id:             0,
 		location:       1,
@@ -224,34 +232,43 @@ func field(s string) int {
 	if exists {
 		return index
 	} else {
+		// TODO: Need error handling for this, otherwise app will just crash
 		return -1
 	}
 }
 
 func convertLinesToWaypoints(data [][]string) []OAWpt {
 
-	// 16939,"R. Mte. Cardoso 12-14, 3090, Portugal",Costa De Lavos Service area ,Established Campground,"Service area with toilets, showers, (only during the season) water and place to dispose the gray water. Right on the beach. Nice village to see, Casa dos Pescadores to be visited.",40.087700,-8.872940,17.5283203125,2022-07-17 00:00:00 UTC,Yes,No,No,No,,No,Cold,Non-Potable,Running Water,Yes,No,Yes,Yes,,,,,,,,,,,,,,,
+	// TODO: Make sure to set places that are marked as not open to a different color
+
+	// TODO: Make this xargs
+	lonMax := -114.0
+	lonMin := -168.0
 
 	var waypoints []OAWpt
 	for i, line := range data {
 		if i > 0 {
-			wp := OAWpt{
-				WptLat:      line[field("Latitude")],
-				WptLon:      line[6],
-				WptElevaton: line[7],
-				WptTime:     line[8],
-				WptName:     line[2],
-				WptDesc:     createDescription(line),
-				WptType:     line[3],
-				WptExtensions: OAWptExtensions{
-					WEIcon:           "tourism_camp_site",
-					WEBackground:     "circle",
-					WEColor:          "#ffff80ff",
-					WEAmenitySubtype: "user_defined_other_postcode",
-					WEAmenityType:    "user_defined_other",
-				},
+			currentLineLon, _ := strconv.ParseFloat(line[field(lon)], 8)
+			if currentLineLon > lonMin && currentLineLon < lonMax {
+				wp := OAWpt{
+					WptLat:      line[field(lat)],
+					WptLon:      line[field(lon)],
+					WptElevaton: line[field(altitude)],
+					WptTime:     line[field(dateVerified)],
+					WptName:     line[field(name)],
+					WptDesc:     createDescription(line),
+					WptType:     line[field(category)],
+					WptExtensions: OAWptExtensions{
+						// TODO: Make these dynamic
+						WEIcon:           "tourism_camp_site",
+						WEBackground:     "circle",
+						WEColor:          "#ffff80ff",
+						WEAmenitySubtype: "user_defined_other_postcode",
+						WEAmenityType:    "user_defined_other",
+					},
+				}
+				waypoints = append(waypoints, wp)
 			}
-			waypoints = append(waypoints, wp)
 		}
 
 	}
