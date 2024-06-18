@@ -73,6 +73,8 @@ func main() {
 
 func write() {
 
+	// TODO: Make the groups dynamic based on the data in the file
+
 	gpx := OAGpx{
 		Version:    "OsmAnd 4.6.6",
 		Creator:    "OsmAnd Maps 4.6.6 (4.6.6.1)",
@@ -138,45 +140,95 @@ func readCsvFile() []OAWpt {
 	return convertLinesToWaypoints(data)
 }
 
-func convertLinesToWaypoints(data [][]string) []OAWpt {
+const id = "Id"
+const location = "Location"
+const name = "Name"
+const category = "Category"
+const description = "Description"
+const lat = "Latitude"
+const lon = "Longitude"
+const altitude = "Altitude"
+const dateVerified = "Date verified"
+const open = "Open"
+const electricity = "Electricity"
+const wifi = "WiFi"
+const kitchen = "Kitchen"
+const parking = "Parking"
+const restaurant = "Restaurant"
+const showers = "Showers"
+const water = "Water"
+const wc = "Toilets"
+const bigRig = "Big rig friendly"
+const tent = "Tent friendly"
+const pets = "Pet friendly"
+const sani = "Sanitation dump station"
+const outdoorGear = "Outdoor gear"
+const groceries = "Groceries"
+const artisan = "Artisan goods"
+const bakery = "Bakery"
+const rarity = "Rarity in this area"
+const repVehicle = "Repairs vehicle"
+const repMoto = "Repairs motorcycles"
+const repBicycle = "Repairs bicycles"
+const sellParts = "Sells parts"
+const recBatt = "Recycles batteries"
+const recOil = "Recycles oil"
+const bioFuel = "Bio fuel"
+const evCharging = "Electric vehicle charging"
+const compostSawdust = "Composting sawdust"
+const recCenter = "Recycling center"
 
-	// 0: 	Id,
-	// 1: 	Location,
-	// 2: 	Name,
-	// 3: 	Category,
-	// 4:	Description,
-	// 5:	Latitude,
-	// 6:	Longitude,
-	// 7:	Altitude,
-	// 8:	Date verified,
-	// 9:	Open,
-	// 10:	Electricity,
-	// 11:	Wifi,
-	// 12:	Kitchen,
-	// 13:	Parking,
-	// 14:	Restaurant,
-	// 15:	Showers,
-	// 16:	Water,
-	// 17:	Toilets,
-	// 18:	Big rig friendly,
-	// 19:	Tent friendly,
-	// 20:	Pet friendly,
-	// 21:	Sanitation dump station,
-	// 22:	Outdoor gear,
-	// 23:	Groceries,
-	// 24:	Artisan goods,
-	// 25:	Bakery,
-	// 26:	Rarity in this area,
-	// 27:	Repairs vehicles,
-	// 28:	Repairs motorcycles,
-	// 29:	Repairs bicycles,
-	// 30:	Sells parts,
-	// 31:	Recycles batteries,
-	// 32:	Recycles oil,
-	// 33:	Bio fuel,
-	// 34:	Electric vehicle charging,
-	// 35:	Composting sawdust,
-	// 36:	Recycling center
+func field(s string) int {
+
+	var fields = map[string]int{
+		id:             0,
+		location:       1,
+		name:           2,
+		category:       3,
+		description:    4,
+		lat:            5,
+		lon:            6,
+		altitude:       7,
+		dateVerified:   8,
+		open:           9,
+		electricity:    10,
+		wifi:           11,
+		kitchen:        12,
+		parking:        13,
+		restaurant:     14,
+		showers:        15,
+		water:          16,
+		wc:             17,
+		bigRig:         18,
+		tent:           19,
+		pets:           20,
+		sani:           21,
+		outdoorGear:    22,
+		groceries:      23,
+		artisan:        24,
+		bakery:         25,
+		rarity:         26,
+		repVehicle:     27,
+		repMoto:        28,
+		repBicycle:     29,
+		sellParts:      30,
+		recBatt:        31,
+		recOil:         32,
+		bioFuel:        33,
+		evCharging:     34,
+		compostSawdust: 35,
+		recCenter:      36,
+	}
+
+	index, exists := fields[s]
+	if exists {
+		return index
+	} else {
+		return -1
+	}
+}
+
+func convertLinesToWaypoints(data [][]string) []OAWpt {
 
 	// 16939,"R. Mte. Cardoso 12-14, 3090, Portugal",Costa De Lavos Service area ,Established Campground,"Service area with toilets, showers, (only during the season) water and place to dispose the gray water. Right on the beach. Nice village to see, Casa dos Pescadores to be visited.",40.087700,-8.872940,17.5283203125,2022-07-17 00:00:00 UTC,Yes,No,No,No,,No,Cold,Non-Potable,Running Water,Yes,No,Yes,Yes,,,,,,,,,,,,,,,
 
@@ -184,12 +236,12 @@ func convertLinesToWaypoints(data [][]string) []OAWpt {
 	for i, line := range data {
 		if i > 0 {
 			wp := OAWpt{
-				WptLat:      line[5],
+				WptLat:      line[field("Latitude")],
 				WptLon:      line[6],
 				WptElevaton: line[7],
 				WptTime:     line[8],
 				WptName:     line[2],
-				WptDesc:     line[4],
+				WptDesc:     createDescription(line),
 				WptType:     line[3],
 				WptExtensions: OAWptExtensions{
 					WEIcon:           "tourism_camp_site",
@@ -204,4 +256,21 @@ func convertLinesToWaypoints(data [][]string) []OAWpt {
 
 	}
 	return waypoints
+}
+
+func createDescription(line []string) string {
+	// TODO: use category field to determine which fields to combine
+
+	var campsiteFields = []string{
+		dateVerified, open, electricity, wifi, kitchen, parking,
+		restaurant, showers, water, wc, bigRig, tent, pets, sani,
+	}
+	var desc string
+	desc = line[field(description)] + "\n\n"
+
+	for _, f := range campsiteFields {
+		desc += f + ": " + line[field(f)] + "\n"
+	}
+
+	return desc
 }
