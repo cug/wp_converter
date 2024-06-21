@@ -3,15 +3,55 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
-func main() {
-	// TODO: read args here and then call the appropriate function or
-	// fail the call to the app
+var mapBoundaries map[string]float64
+var fileToConvert string = "none"
 
+func main() {
+	readArguments()
+	if fileToConvert == "none" {
+		log.Fatal("no input file")
+		os.Exit(-1)
+	}
 	write()
+}
+
+func readArguments() {
+	var boundaryArguments = make(map[string]float64)
+	validArgumentNames := []string{"lonMin", "lonMax", "latMin", "latMax"}
+
+	for i, a := range os.Args {
+		if i > 0 {
+			if len(a) > 2 && a[:2] == "--" {
+				v := strings.Split(a, "=")
+				if len(v) == 2 {
+					key := v[0][2:]
+					if isValueInList(key, validArgumentNames) {
+						boundaryArguments[key], _ = strconv.ParseFloat(v[1], 8)
+					}
+				}
+			} else {
+				if a == "-i" {
+					fileToConvert = os.Args[i+1]
+				}
+			}
+		}
+	}
+	mapBoundaries = boundaryArguments
+}
+
+func isValueInList(value string, list []string) bool {
+	for _, v := range list {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }
 
 func write() {
@@ -66,22 +106,22 @@ func write() {
 
 func readWaypoints() []OAWpt {
 
-	return convertLinesToWaypoints(readCvsData(os.Args[1]))
+	return convertLinesToWaypoints(readCvsData(fileToConvert))
 }
 
 func convertLinesToWaypoints(data [][]string) []OAWpt {
 
 	// TODO: Make sure to set places that are marked as not open to a different color
 
-	// TODO: Make this xargs
-	lonMax := -114.0
-	lonMin := -168.0
+	lonMin, lonMax, latMin, latMax := coordinateBoundaries()
 
 	var waypoints []OAWpt
 	for i, line := range data {
 		if i > 0 {
 			currentLineLon, _ := strconv.ParseFloat(line[fieldIndexForString(csvLon)], 8)
-			if currentLineLon > lonMin && currentLineLon < lonMax {
+			currentLineLat, _ := strconv.ParseFloat(line[fieldIndexForString(csvLat)], 8)
+			if currentLineLon > lonMin && currentLineLon < lonMax &&
+				currentLineLat > latMin && currentLineLat < latMax {
 				waypointType := line[fieldIndexForString(csvCategory)]
 				icon, color, background := iconBackgroundColorForType(waypointType)
 				wp := OAWpt{
@@ -107,4 +147,22 @@ func convertLinesToWaypoints(data [][]string) []OAWpt {
 
 	}
 	return waypoints
+}
+
+func coordinateBoundaries() (float64, float64, float64, float64) {
+	lonMin, lonMax, latMin, latMax := -180.0, 180.0, -90.0, 90.0
+	if mapBoundaries["lonMin"] != 0.0 {
+		lonMin = mapBoundaries["lonMin"]
+	}
+	if mapBoundaries["lonMax"] != 0.0 {
+		lonMax = mapBoundaries["lonMax"]
+	}
+	if mapBoundaries["latMin"] != 0.0 {
+		latMin = mapBoundaries["latMin"]
+	}
+	if mapBoundaries["latMax"] != 0.0 {
+		latMax = mapBoundaries["latMax"]
+	}
+
+	return lonMin, lonMax, latMin, latMax
 }
