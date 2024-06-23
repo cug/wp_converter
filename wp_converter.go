@@ -105,12 +105,10 @@ func write() {
 }
 
 func readWaypoints() []OAWpt {
-
 	return convertLinesToWaypoints(readCvsData(fileToConvert))
 }
 
 func convertLinesToWaypoints(data [][]string) []OAWpt {
-
 	// TODO: Make sure to set places that are marked as not open to a different color
 
 	lonMin, lonMax, latMin, latMax := coordinateBoundaries()
