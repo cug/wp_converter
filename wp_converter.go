@@ -10,13 +10,12 @@ import (
 )
 
 var mapBoundaries map[string]float64
-var fileToConvert string = "none"
+var fileToConvert = "none"
 
 func main() {
 	readArguments()
 	if fileToConvert == "none" {
 		log.Fatal("no input file")
-		os.Exit(-1)
 	}
 	write()
 }
@@ -61,14 +60,14 @@ func write() {
 	gpx := OAGpx{
 		Version:    "OsmAnd 4.6.6",
 		Creator:    "OsmAnd Maps 4.6.6 (4.6.6.1)",
-		BaseNS:     "http://www.topografix.com/GPX/1/1",
+		BaseNS:     "https://www.topografix.com/GPX/1/1/",
 		OsmNS:      "https://osmand.net",
-		Namepace:   "http://www.garmin.com/xmlschemas/TrackPointExtension/v1",
-		Xsi:        "http://www.w3.org/2001/XMLSchema-instance",
-		XsiLocaton: "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd",
+		Namepace:   "https://www.garmin.com/xmlschemas/TrackPointExtension/v1",
+		Xsi:        "https://www.w3.org/2001/XMLSchema-instance",
+		XsiLocaton: "https://www.topografix.com/GPX/1/1/gpx.xsd",
 		Waypoints:  readWaypoints(),
 		Metadata: OAGpxMetadata{
-			Name:   "favories",
+			Name:   "favorites",
 			GMTime: "1970-01-01T08:00:00Z",
 		},
 		Extensions: OAGpxExtensions{
