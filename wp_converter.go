@@ -130,7 +130,6 @@ func convertLinesToWaypoints(data [][]string) []OAWpt {
 					WptDesc:     createDescription(line),
 					WptType:     waypointType,
 					WptExtensions: OAWptExtensions{
-						// TODO: Make these dynamic
 						WEIcon:           icon,
 						WEBackground:     background,
 						WEColor:          color,
