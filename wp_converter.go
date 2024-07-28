@@ -17,7 +17,7 @@ func main() {
 	if fileToConvert == "none" {
 		log.Fatal("no input file")
 	}
-	write()
+	convert()
 }
 
 func readArguments() {
@@ -53,9 +53,11 @@ func isValueInList(value string, list []string) bool {
 	return false
 }
 
-func write() {
+func convert() {
 
 	// TODO: Make the groups dynamic based on the data in the file
+
+	lineData := convertLinesToWaypoints()
 
 	gpx := OAGpx{
 		Version:    "OsmAnd 4.6.6",
@@ -65,7 +67,7 @@ func write() {
 		Namepace:   "https://www.garmin.com/xmlschemas/TrackPointExtension/v1",
 		Xsi:        "https://www.w3.org/2001/XMLSchema-instance",
 		XsiLocaton: "https://www.topografix.com/GPX/1/1/gpx.xsd",
-		Waypoints:  readWaypoints(),
+		Waypoints:  lineData,
 		Metadata: OAGpxMetadata{
 			Name:   "favorites",
 			GMTime: "1970-01-01T08:00:00Z",
@@ -103,13 +105,10 @@ func write() {
 	fmt.Printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n%s\n", xmlData)
 }
 
-func readWaypoints() []OAWpt {
-	return convertLinesToWaypoints(readCvsData(fileToConvert))
-}
-
-func convertLinesToWaypoints(data [][]string) []OAWpt {
+func convertLinesToWaypoints() []OAWpt {
 	// TODO: Make sure to set places that are marked as not open to a different color
 
+	data := readCvsData(fileToConvert)
 	lonMin, lonMax, latMin, latMax := coordinateBoundaries()
 
 	var waypoints []OAWpt
