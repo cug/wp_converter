@@ -8,10 +8,16 @@ Use this tool at your own risk.
 
 # Usage
 
-Clone the repository, compile wp_converter (or use go run), then use like this:
+Clone the repository, compile wp_converter (or use "go run ."), then use like this:
 
 ```shell
 wp_converter -i infile.csv > outfile.gpx
+```
+
+or
+
+```shell
+go run . -i infile.csv > outfile.gpx
 ```
 
 # Workflow
