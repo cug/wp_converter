@@ -20,6 +20,12 @@ func main() {
 	convert()
 }
 
+// Provide boundary arguments for latitude and longitude like this:
+// wp_converter --latMin=50.00 -i infile.csv > outfile.gpx
+// provide the input file, the one downloaded from iOverlander via:
+// ... -i infile.csv ...
+// write the output to a file like this:
+// ./wp_converter -i infile.csv > outfile.gpx
 func readArguments() {
 	var boundaryArguments = make(map[string]float64)
 	validArgumentNames := []string{"lonMin", "lonMax", "latMin", "latMax"}
