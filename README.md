@@ -1,6 +1,6 @@
 # wp_converter
 
-Quick and dirty conversion tool from an Overlander CSV download to OsmAnd favorites GPX.
+Quick and dirty waypoint conversion tool from an Overlander CSV download to OsmAnd favorites GPX.
 
 You should be familiar with go, commandline, reading code to understand possible problems, and, last but not least, OsmAnd and its handling of favorite import and export.
 
@@ -43,7 +43,7 @@ go run . -i infile.csv > outfile.gpx
 - Tests ... I really need tests, I was just lazy so far
 - Input validation, currently the infile is not validated at available
 - At least some documentation
-- Code cleanup ... I haven't written code in many years and it shows badly, sorry for the mess, hopefully it'll get better over time
+- Code cleanup ...
 - One feature idea is to be able to provide a mapping file to map categories to OsmAnd categories, icons, and colors, right now this is hardcoded
 
 # Feedback
