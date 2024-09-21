@@ -50,15 +50,6 @@ func readArguments() {
 	mapBoundaries = boundaryArguments
 }
 
-func isValueInList(value string, list []string) bool {
-	for _, v := range list {
-		if v == value {
-			return true
-		}
-	}
-	return false
-}
-
 func convert() {
 
 	// TODO: Make the groups dynamic based on the data in the file

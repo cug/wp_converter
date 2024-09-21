@@ -6,7 +6,7 @@ Quick and dirty waypoint conversion tool from an Overlander CSV download to OsmA
 
 You should be familiar with go, commandline, reading code to understand possible problems, and, last but not least, OsmAnd and its handling of favorite import and export.
 
-Use this tool at your own risk.
+Use this tool at your own risk. I'm using this tool also as my personl Go learning playground, so there might be weirdness in language constructs, misuse of language ideas and so on. File an issue if something actually bothers you.
 
 # Usage
 
