@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+// TODO: Is there a better way to define these?
+
 // Constants for CSV fields
 const csvId = "Id"
 const csvLocation = "Location"
@@ -104,9 +106,11 @@ func createDescription(line []string) string {
 		csvRestaurant, csvShowers, csvWater, csvToilets, csvBigRig, csvTent, csvPets, csvSani,
 	}
 	var desc string
+	// TODO: Handle empty fields properly
 	desc = line[fieldIndexForString(csvDescription)] + "\n\n"
 
 	for _, f := range campsiteFields {
+		// TODO: Handle empty fields properly
 		desc += f + ": " + line[fieldIndexForString(f)] + "\n"
 	}
 

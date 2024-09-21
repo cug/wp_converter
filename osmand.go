@@ -4,6 +4,8 @@ import (
 	"encoding/xml"
 )
 
+// TODO: Write a validation function
+
 type OAGpx struct {
 	XMLName    xml.Name        `xml:"gpx"`
 	Version    string          `xml:"version,attr"`

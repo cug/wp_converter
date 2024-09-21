@@ -37,6 +37,7 @@ func readArguments() {
 				if len(v) == 2 {
 					key := v[0][2:]
 					if isValueInList(key, validArgumentNames) {
+						// TODO Handle syntax error from parsing float
 						boundaryArguments[key], _ = strconv.ParseFloat(v[1], 8)
 					}
 				}
@@ -45,6 +46,8 @@ func readArguments() {
 					fileToConvert = os.Args[i+1]
 				}
 			}
+			// TODO: Handle invalid arguments
+			// TODO: Add argument to specify outfile
 		}
 	}
 	mapBoundaries = boundaryArguments
@@ -99,6 +102,7 @@ func convert() {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
+	// TODO: Write to outfile if specified as an argument
 	fmt.Printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n%s\n", xmlData)
 }
 
@@ -110,11 +114,15 @@ func convertLinesToWaypoints() []OAWpt {
 
 	var waypoints []OAWpt
 	for i, line := range data {
+		// TODO: Run line through validation
 		if i > 0 {
+			// TODO: Handle errors properly
 			currentLineLon, _ := strconv.ParseFloat(line[fieldIndexForString(csvLon)], 8)
 			currentLineLat, _ := strconv.ParseFloat(line[fieldIndexForString(csvLat)], 8)
 			if currentLineLon > lonMin && currentLineLon < lonMax &&
+				// TODO: Make sure the values make sense
 				currentLineLat > latMin && currentLineLat < latMax {
+				// TODO: Make sure the category is in a supported list
 				waypointType := line[fieldIndexForString(csvCategory)]
 				icon, color, background := iconBackgroundColorForType(waypointType)
 				wp := OAWpt{
@@ -133,6 +141,7 @@ func convertLinesToWaypoints() []OAWpt {
 						WEAmenityType:    "user_defined_other",
 					},
 				}
+				// TODO: Discard waypoint if it failed validation
 				waypoints = append(waypoints, wp)
 			}
 		}
@@ -142,6 +151,7 @@ func convertLinesToWaypoints() []OAWpt {
 }
 
 func coordinateBoundaries() (float64, float64, float64, float64) {
+	// TODO: Move mapBoundaries to an argument, get rid of global
 	lonMin, lonMax, latMin, latMax := -180.0, 180.0, -90.0, 90.0
 	if mapBoundaries["lonMin"] != 0.0 {
 		lonMin = mapBoundaries["lonMin"]
