@@ -10,21 +10,22 @@ import (
 )
 
 var mapBoundaries map[string]float64
-var fileToConvert = "none"
+var infile = "none"
+var outfile = "none"
 
 func main() {
 	readArguments()
-	if fileToConvert == "none" {
+	if infile == "none" {
 		log.Fatal("no input file")
 	}
 	convert()
 }
 
 // Provide boundary arguments for latitude and longitude like this:
-// wp_converter --latMin=50.00 -i infile.csv > outfile.gpx
+// wp_converter --latMin=50.00 -i infile.csv -o outfile.gpx
 // provide the input file, the one downloaded from iOverlander via:
-// ... -i infile.csv ...
-// write the output to a file like this:
+// ... -i infile.csv -o outfile.gpx ...
+// or write the output to a file like this:
 // ./wp_converter -i infile.csv > outfile.gpx
 func readArguments() {
 	var boundaryArguments = make(map[string]float64)
@@ -43,11 +44,12 @@ func readArguments() {
 				}
 			} else {
 				if a == "-i" {
-					fileToConvert = os.Args[i+1]
+					infile = os.Args[i+1]
+				} else if a == "-o" {
+					outfile = os.Args[i+1]
 				}
 			}
 			// TODO: Handle invalid arguments
-			// TODO: Add argument to specify outfile
 		}
 	}
 	mapBoundaries = boundaryArguments
@@ -102,14 +104,19 @@ func convert() {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
-	// TODO: Write to outfile if specified as an argument
-	fmt.Printf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n%s\n", xmlData)
+
+	// Not very elegant, but it works
+	var converted = []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
+	converted = append(converted, xmlData...)
+	converted = append(converted, "\n"...)
+
+	writeToFile(converted, outfile)
 }
 
 func convertLinesToWaypoints() []OAWpt {
 	// TODO: Make sure to set places that are marked as not open to a different color
 
-	data := readCvsData(fileToConvert)
+	data := readCvsData(infile)
 	lonMin, lonMax, latMin, latMax := coordinateBoundaries()
 
 	var waypoints []OAWpt

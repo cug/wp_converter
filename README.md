@@ -13,13 +13,13 @@ Use this tool at your own risk. I'm using this tool also as my personl Go learni
 Clone the repository, compile wp_converter (or use "go run ."), then use like this:
 
 ```shell
-wp_converter -i infile.csv > outfile.gpx
+wp_converter -i infile.csv -o outfile.gpx
 ```
 
 or
 
 ```shell
-go run . -i infile.csv > outfile.gpx
+go run . -i infile.csv -o outfile.gpx
 ```
 
 # Workflow
