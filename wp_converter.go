@@ -23,7 +23,7 @@ func main() {
 }
 
 // Provide boundary arguments for latitude and longitude like this:
-// wp_converter --latMin=50.00 -i infile.csv -o outfile.gpx
+// wp_converter --latMin=50.00 --latMax=51.0 -i infile.csv -o outfile.gpx
 // provide the input file, the one downloaded from iOverlander via:
 // ... -i infile.csv -o outfile.gpx ...
 // or write the output to a file like this:
@@ -49,10 +49,12 @@ func readArguments() {
 			} else {
 				if a == "-i" {
 					infile = os.Args[i+1]
+					i++
 				} else if a == "-o" {
 					outfile = os.Args[i+1]
+					i++
 				} else {
-					log.Fatal("Argument not recognized: ", a)
+					// ignore
 				}
 			}
 		}
@@ -164,7 +166,6 @@ func convertLinesToWaypoints() []OAWpt {
 }
 
 func coordinateBoundaries() (float64, float64, float64, float64) {
-	// TODO: Move mapBoundaries to an argument, get rid of global
 	lonMin, lonMax, latMin, latMax := -180.0, 180.0, -90.0, 90.0
 	if mapBoundaries["lonMin"] != 0.0 {
 		lonMin = mapBoundaries["lonMin"]
@@ -179,5 +180,31 @@ func coordinateBoundaries() (float64, float64, float64, float64) {
 		latMax = mapBoundaries["latMax"]
 	}
 
+	validateBoundaries(lonMin, lonMax, latMin, latMax)
 	return lonMin, lonMax, latMin, latMax
+}
+
+func validateBoundaries(lonMin float64, lonMax float64, latMin float64, latMax float64) {
+	var message = ""
+	if lonMin > lonMax {
+		message += "\nlonMin > lonMax"
+	}
+	if lonMin < -180.0 || lonMin > 180.0 {
+		message += "\nlonMin out of bounds"
+	}
+	if lonMax < -180.0 || lonMax > 180.0 {
+		message += "\nlonMax out of bounds"
+	}
+	if latMin > latMax {
+		message += "\nlatMin > latMax"
+	}
+	if latMin < -90.0 || latMin > 90.0 {
+		message += "\nlatMin out of bounds"
+	}
+	if latMax < -90.0 || latMax > 90.0 {
+		message += "\nlatMax out of bounds"
+	}
+	if message != "" {
+		log.Fatal(message)
+	}
 }
