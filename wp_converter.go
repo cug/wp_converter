@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// TODO: Get rid of globals
 var mapBoundaries map[string]float64
 var infile = "none"
 var outfile = "none"
@@ -38,8 +39,11 @@ func readArguments() {
 				if len(v) == 2 {
 					key := v[0][2:]
 					if isValueInList(key, validArgumentNames) {
-						// TODO Handle syntax error from parsing float
-						boundaryArguments[key], _ = strconv.ParseFloat(v[1], 8)
+						value, err := strconv.ParseFloat(v[1], 8)
+						checkForError(err)
+						boundaryArguments[key] = value
+					} else {
+						log.Fatal("Invalid boundary argument ", key)
 					}
 				}
 			} else {
@@ -47,11 +51,13 @@ func readArguments() {
 					infile = os.Args[i+1]
 				} else if a == "-o" {
 					outfile = os.Args[i+1]
+				} else {
+					log.Fatal("Argument not recognized: ", a)
 				}
 			}
-			// TODO: Handle invalid arguments
 		}
 	}
+	// TODO: Validate that boundaries actually make sense, throw error if they don't
 	mapBoundaries = boundaryArguments
 }
 
