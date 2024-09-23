@@ -62,7 +62,7 @@ func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 
 	// TODO: Make the groups dynamic based on the data in the file
 
-	lineData := convertLinesToWaypoints(infile, mapBoundaries)
+	waypoints := convertLinesToWaypoints(infile, mapBoundaries)
 
 	gpx := OAGpx{
 		Version:    "OsmAnd 4.6.6",
@@ -72,7 +72,7 @@ func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 		Namepace:   "https://www.garmin.com/xmlschemas/TrackPointExtension/v1",
 		Xsi:        "https://www.w3.org/2001/XMLSchema-instance",
 		XsiLocaton: "https://www.topografix.com/GPX/1/1/gpx.xsd",
-		Waypoints:  lineData,
+		Waypoints:  waypoints,
 		Metadata: OAGpxMetadata{
 			Name:   "favorites",
 			GMTime: "1970-01-01T08:00:00Z",
