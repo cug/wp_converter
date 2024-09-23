@@ -9,17 +9,12 @@ import (
 	"strings"
 )
 
-// TODO: Get rid of globals
-var mapBoundaries map[string]float64
-var infile = "none"
-var outfile = "none"
-
 func main() {
-	readArguments()
+	var infile, outfile, mapBoundaries = readArguments()
 	if infile == "none" {
 		log.Fatal("no input file")
 	}
-	convert()
+	convert(infile, outfile, mapBoundaries)
 }
 
 // Provide boundary arguments for latitude and longitude like this:
@@ -28,7 +23,8 @@ func main() {
 // ... -i infile.csv -o outfile.gpx ...
 // or write the output to a file like this:
 // ./wp_converter -i infile.csv > outfile.gpx
-func readArguments() {
+func readArguments() (string, string, map[string]float64) {
+	var infile, outfile string = "none", "none"
 	var boundaryArguments = make(map[string]float64)
 	validArgumentNames := []string{"lonMin", "lonMax", "latMin", "latMax"}
 
@@ -59,15 +55,14 @@ func readArguments() {
 			}
 		}
 	}
-	// TODO: Validate that boundaries actually make sense, throw error if they don't
-	mapBoundaries = boundaryArguments
+	return infile, outfile, boundaryArguments
 }
 
-func convert() {
+func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 
 	// TODO: Make the groups dynamic based on the data in the file
 
-	lineData := convertLinesToWaypoints()
+	lineData := convertLinesToWaypoints(infile, mapBoundaries)
 
 	gpx := OAGpx{
 		Version:    "OsmAnd 4.6.6",
@@ -121,11 +116,11 @@ func convert() {
 	writeToFile(converted, outfile)
 }
 
-func convertLinesToWaypoints() []OAWpt {
+func convertLinesToWaypoints(infile string, mapBoundaries map[string]float64) []OAWpt {
 	// TODO: Make sure to set places that are marked as not open to a different color
 
 	data := readCvsData(infile)
-	lonMin, lonMax, latMin, latMax := coordinateBoundaries()
+	lonMin, lonMax, latMin, latMax := coordinateBoundaries(mapBoundaries)
 
 	var waypoints []OAWpt
 	for i, line := range data {
@@ -135,7 +130,6 @@ func convertLinesToWaypoints() []OAWpt {
 			currentLineLon, _ := strconv.ParseFloat(line[fieldIndexForString(csvLon)], 8)
 			currentLineLat, _ := strconv.ParseFloat(line[fieldIndexForString(csvLat)], 8)
 			if currentLineLon > lonMin && currentLineLon < lonMax &&
-				// TODO: Make sure the values make sense
 				currentLineLat > latMin && currentLineLat < latMax {
 				// TODO: Make sure the category is in a supported list
 				waypointType := line[fieldIndexForString(csvCategory)]
@@ -165,19 +159,19 @@ func convertLinesToWaypoints() []OAWpt {
 	return waypoints
 }
 
-func coordinateBoundaries() (float64, float64, float64, float64) {
+func coordinateBoundaries(boundaries map[string]float64) (float64, float64, float64, float64) {
 	lonMin, lonMax, latMin, latMax := -180.0, 180.0, -90.0, 90.0
-	if mapBoundaries["lonMin"] != 0.0 {
-		lonMin = mapBoundaries["lonMin"]
+	if boundaries["lonMin"] != 0.0 {
+		lonMin = boundaries["lonMin"]
 	}
-	if mapBoundaries["lonMax"] != 0.0 {
-		lonMax = mapBoundaries["lonMax"]
+	if boundaries["lonMax"] != 0.0 {
+		lonMax = boundaries["lonMax"]
 	}
-	if mapBoundaries["latMin"] != 0.0 {
-		latMin = mapBoundaries["latMin"]
+	if boundaries["latMin"] != 0.0 {
+		latMin = boundaries["latMin"]
 	}
-	if mapBoundaries["latMax"] != 0.0 {
-		latMax = mapBoundaries["latMax"]
+	if boundaries["latMax"] != 0.0 {
+		latMax = boundaries["latMax"]
 	}
 
 	validateBoundaries(lonMin, lonMax, latMin, latMax)
