@@ -43,8 +43,6 @@ go run . -i infile.csv -o outfile.gpx
 # Planned Work
 
 - Tests ... I really need tests, I was just lazy so far
-- Input validation, currently the infile is not validated at available
-- At least some documentation
 - Code cleanup ...
 - One feature idea is to be able to provide a mapping file to map categories to OsmAnd categories, icons, and colors, right now this is hardcoded
 

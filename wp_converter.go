@@ -125,7 +125,8 @@ func convertLinesToWaypoints(infile string, mapBoundaries map[string]float64) []
 	var waypoints []OAWpt
 	for i, line := range data {
 		if i > 0 && validateCsvLine(line) {
-			// TODO: Handle errors properly
+			// Currently I'm relying on above line validation, therefore not handling
+			// the parse errors
 			currentLineLon, _ := strconv.ParseFloat(line[fieldIndexForString(csvLon)], 8)
 			currentLineLat, _ := strconv.ParseFloat(line[fieldIndexForString(csvLat)], 8)
 			if currentLineLon > lonMin && currentLineLon < lonMax &&
