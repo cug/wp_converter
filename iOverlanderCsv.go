@@ -98,25 +98,6 @@ func fieldIndexForString(s string) int {
 	}
 }
 
-func createDescription(line []string) string {
-	// TODO: use category field to determine which fields to combine
-
-	var campsiteFields = []string{
-		csvDateVerified, csvOpwn, csvElectricity, csvWifi, csvKitchen, csvParking,
-		csvRestaurant, csvShowers, csvWater, csvToilets, csvBigRig, csvTent, csvPets, csvSani,
-	}
-	var desc string
-	// TODO: Handle empty fields properly
-	desc = line[fieldIndexForString(csvDescription)] + "\n\n"
-
-	for _, f := range campsiteFields {
-		// TODO: Handle empty fields properly
-		desc += f + ": " + line[fieldIndexForString(f)] + "\n"
-	}
-
-	return desc
-}
-
 func readCvsData(filename string) [][]string {
 	f, err := os.Open(filename)
 	if err != nil {

@@ -45,9 +45,11 @@ func readArguments() (string, string, map[string]float64) {
 			} else {
 				if a == "-i" {
 					infile = os.Args[i+1]
+					// skip next argument since we are reading it as a filename
 					i++
 				} else if a == "-o" {
 					outfile = os.Args[i+1]
+					// skip next argument since we are reading it as a filename
 					i++
 				} else {
 					// ignore
@@ -62,7 +64,7 @@ func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 
 	// TODO: Make the groups dynamic based on the data in the file
 
-	waypoints := convertLinesToWaypoints(infile, mapBoundaries)
+	waypoints := convertLines(infile, mapBoundaries)
 
 	gpx := OAGpx{
 		Version:    "OsmAnd 4.6.6",
@@ -77,6 +79,7 @@ func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 			Name:   "favorites",
 			GMTime: "1970-01-01T08:00:00Z",
 		},
+		// TODO: Figure out, whether this is actually needed and/or what it does
 		Extensions: OAGpxExtensions{
 			PointsGroups: OAPointsGroups{
 				Group: []OAGroup{
@@ -116,7 +119,7 @@ func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 	writeToFile(converted, outfile)
 }
 
-func convertLinesToWaypoints(infile string, mapBoundaries map[string]float64) []OAWpt {
+func convertLines(infile string, mapBoundaries map[string]float64) []OAWpt {
 	// TODO: Make sure to set places that are marked as not open to a different color
 
 	data := readCvsData(infile)
@@ -144,7 +147,6 @@ func convertLinesToWaypoints(infile string, mapBoundaries map[string]float64) []
 }
 
 func convertCsvLineToWaypoint(line []string) OAWpt {
-	// TODO: Make sure the category is in a supported list
 	waypointType := line[fieldIndexForString(csvCategory)]
 	icon, color, background := iconBackgroundColorForType(waypointType)
 	wp := OAWpt{
@@ -181,33 +183,8 @@ func coordinateBoundaries(boundaries map[string]float64) (float64, float64, floa
 		latMax = boundaries["latMax"]
 	}
 
-	validateBoundaries(lonMin, lonMax, latMin, latMax)
+	validateCoordinateBoundaries(lonMin, lonMax, latMin, latMax)
 	return lonMin, lonMax, latMin, latMax
-}
-
-func validateBoundaries(lonMin float64, lonMax float64, latMin float64, latMax float64) {
-	var message = ""
-	if lonMin > lonMax {
-		message += "\nlonMin > lonMax"
-	}
-	if lonMin < -180.0 || lonMin > 180.0 {
-		message += "\nlonMin out of bounds"
-	}
-	if lonMax < -180.0 || lonMax > 180.0 {
-		message += "\nlonMax out of bounds"
-	}
-	if latMin > latMax {
-		message += "\nlatMin > latMax"
-	}
-	if latMin < -90.0 || latMin > 90.0 {
-		message += "\nlatMin out of bounds"
-	}
-	if latMax < -90.0 || latMax > 90.0 {
-		message += "\nlatMax out of bounds"
-	}
-	if message != "" {
-		log.Fatal(message)
-	}
 }
 
 func createDescription(line []string) string {
