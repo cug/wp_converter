@@ -118,9 +118,6 @@ func createDescription(line []string) string {
 }
 
 func readCvsData(filename string) [][]string {
-	// TODO: Clean this up into separate functions to open file, read CSV and then
-	// decode into useful data
-
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -140,6 +137,8 @@ func readCvsData(filename string) [][]string {
 }
 
 func validateCsvLine(line []string) bool {
+	// Probably neither great nor complete, but it's a start and I can
+	// add more validation as problem cases arise
 	return validateNotEmptyString(line[fieldIndexForString(csvName)]) &&
 		validateNotEmptyString(line[fieldIndexForString(csvDescription)]) &&
 		validateNotEmptyString(line[fieldIndexForString(csvLat)]) &&
