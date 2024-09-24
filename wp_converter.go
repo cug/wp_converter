@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+var mymap = make(map[string]string)
+
 func main() {
 	var infile, outfile, mapBoundaries = readArguments()
 	if infile == "none" {
@@ -64,7 +66,7 @@ func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 
 	// TODO: Make the groups dynamic based on the data in the file
 
-	waypoints := convertLines(infile, mapBoundaries)
+	waypoints, groups := convertLines(infile, mapBoundaries)
 
 	gpx := OAGpx{
 		Version:    "OsmAnd 4.6.6",
@@ -79,29 +81,9 @@ func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 			Name:   "favorites",
 			GMTime: "1970-01-01T08:00:00Z",
 		},
-		// TODO: Figure out, whether this is actually needed and/or what it does
 		Extensions: OAGpxExtensions{
 			PointsGroups: OAPointsGroups{
-				Group: []OAGroup{
-					{
-						GIcon:       "tourism_camp_site",
-						GBackground: "circle",
-						GColor:      "#ffff0000",
-						GName:       "Informal Campsite",
-					},
-					{
-						GIcon:       "tourism_camp_site",
-						GBackground: "circle",
-						GColor:      "#ffff0000",
-						GName:       "",
-					},
-					{
-						GIcon:       "tourism_camp_site",
-						GBackground: "circle",
-						GColor:      "#ffff0000",
-						GName:       "Established Campground",
-					},
-				},
+				Group: groups,
 			},
 		},
 	}
@@ -119,12 +101,13 @@ func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 	writeToFile(converted, outfile)
 }
 
-func convertLines(infile string, mapBoundaries map[string]float64) []OAWpt {
+func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []OAGroup) {
 	// TODO: Make sure to set places that are marked as not open to a different color
 
 	data := readCvsData(infile)
 	lonMin, lonMax, latMin, latMax := coordinateBoundaries(mapBoundaries)
 
+	var categoryMap = make(map[string]OAGroup)
 	var waypoints []OAWpt
 	for i, line := range data {
 		if i > 0 && validateCsvLine(line) {
@@ -137,13 +120,24 @@ func convertLines(infile string, mapBoundaries map[string]float64) []OAWpt {
 				wp := convertCsvLineToWaypoint(line)
 				if validateWaypoint(wp) {
 					waypoints = append(waypoints, wp)
+					// TODO: Check the map whether the entry already exists
+					categoryMap[wp.WptType] = OAGroup{
+						GIcon:       wp.WptExtensions.WEIcon,
+						GBackground: wp.WptExtensions.WEBackground,
+						GColor:      wp.WptExtensions.WEColor,
+						GName:       wp.WptType,
+					}
 				} else {
 					log.Println("Discarded Waypoint: ", wp)
 				}
 			}
 		}
 	}
-	return waypoints
+	var groups []OAGroup
+	for category := range categoryMap {
+		groups = append(groups, categoryMap[category])
+	}
+	return waypoints, groups
 }
 
 func convertCsvLineToWaypoint(line []string) OAWpt {
