@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-var mymap = make(map[string]string)
-
 func main() {
 	var infile, outfile, mapBoundaries = readArguments()
 	if infile == "none" {
@@ -63,9 +61,6 @@ func readArguments() (string, string, map[string]float64) {
 }
 
 func convert(infile string, outfile string, mapBoundaries map[string]float64) {
-
-	// TODO: Make the groups dynamic based on the data in the file
-
 	waypoints, groups := convertLines(infile, mapBoundaries)
 
 	gpx := OAGpx{
@@ -93,7 +88,7 @@ func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 		return
 	}
 
-	// Not very elegant, but it works
+	// Not very elegant, but it works, maybe I'll learn a better way later
 	var converted = []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
 	converted = append(converted, xmlData...)
 	converted = append(converted, "\n"...)
@@ -109,6 +104,8 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 
 	var categoryMap = make(map[string]OAGroup)
 	var waypoints []OAWpt
+	var discardedWaypoints []OAWpt
+
 	for i, line := range data {
 		if i > 0 && validateCsvLine(line) {
 			// Currently I'm relying on above line validation, therefore not handling
@@ -121,6 +118,9 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 				if validateWaypoint(wp) {
 					waypoints = append(waypoints, wp)
 					// TODO: Check the map whether the entry already exists
+
+					// Create a map of categories to dynamically fill the OsmAnd
+					// Point Group
 					categoryMap[wp.WptType] = OAGroup{
 						GIcon:       wp.WptExtensions.WEIcon,
 						GBackground: wp.WptExtensions.WEBackground,
@@ -128,11 +128,15 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 						GName:       wp.WptType,
 					}
 				} else {
+					discardedWaypoints = append(discardedWaypoints, wp)
 					log.Println("Discarded Waypoint: ", wp)
 				}
 			}
 		}
 	}
+
+	log.Printf("Due to validation errors, %d waypoints were discarded\n", len(discardedWaypoints))
+
 	var groups []OAGroup
 	for category := range categoryMap {
 		groups = append(groups, categoryMap[category])
