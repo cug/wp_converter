@@ -64,6 +64,7 @@ type OAGroup struct {
 }
 
 func iconBackgroundColorForType(t string) (string, string, string) {
+	// TODO: Make this configurable and more flexible
 	var icon, background, color string
 	switch t {
 	case "Established Campground":
@@ -108,7 +109,7 @@ func iconBackgroundColorForType(t string) (string, string, string) {
 }
 
 func validateWaypoint(wp OAWpt) bool {
-
+	// This is likely not complete, but it's a start, better than nothing
 	return validateNotEmptyString(wp.WptName) &&
 		validateNotEmptyString(wp.WptDesc) &&
 		validateNotEmptyString(wp.WptLat) &&
