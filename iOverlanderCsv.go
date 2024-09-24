@@ -138,3 +138,13 @@ func readCvsData(filename string) [][]string {
 
 	return data
 }
+
+func validateCsvLine(line []string) bool {
+	return validateNotEmptyString(line[fieldIndexForString(csvName)]) &&
+		validateNotEmptyString(line[fieldIndexForString(csvDescription)]) &&
+		validateNotEmptyString(line[fieldIndexForString(csvLat)]) &&
+		validateStringParsesToFloat(line[fieldIndexForString(csvLat)]) &&
+		validateNotEmptyString(line[fieldIndexForString(csvLon)]) &&
+		validateStringParsesToFloat(line[fieldIndexForString(csvLon)]) &&
+		validateNotEmptyString(line[fieldIndexForString(csvCategory)])
+}

@@ -4,8 +4,6 @@ import (
 	"encoding/xml"
 )
 
-// TODO: Write a validation function
-
 type OAGpx struct {
 	XMLName    xml.Name        `xml:"gpx"`
 	Version    string          `xml:"version,attr"`
@@ -107,4 +105,16 @@ func iconBackgroundColorForType(t string) (string, string, string) {
 		color = "#ffff80ff"
 	}
 	return icon, color, background
+}
+
+func validateWaypoint(wp OAWpt) bool {
+
+	return validateNotEmptyString(wp.WptName) &&
+		validateNotEmptyString(wp.WptDesc) &&
+		validateNotEmptyString(wp.WptLat) &&
+		validateNotEmptyString(wp.WptLon) &&
+		validateStringParsesToFloat(wp.WptLon) &&
+		validateStringParsesToFloat(wp.WptLat) &&
+		validateNotEmptyString(wp.WptExtensions.WEIcon) &&
+		validateNotEmptyString(wp.WptExtensions.WEColor)
 }

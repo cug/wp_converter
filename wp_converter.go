@@ -124,39 +124,45 @@ func convertLinesToWaypoints(infile string, mapBoundaries map[string]float64) []
 
 	var waypoints []OAWpt
 	for i, line := range data {
-		// TODO: Run line through validation
-		if i > 0 {
+		if i > 0 && validateCsvLine(line) {
 			// TODO: Handle errors properly
 			currentLineLon, _ := strconv.ParseFloat(line[fieldIndexForString(csvLon)], 8)
 			currentLineLat, _ := strconv.ParseFloat(line[fieldIndexForString(csvLat)], 8)
 			if currentLineLon > lonMin && currentLineLon < lonMax &&
 				currentLineLat > latMin && currentLineLat < latMax {
-				// TODO: Make sure the category is in a supported list
-				waypointType := line[fieldIndexForString(csvCategory)]
-				icon, color, background := iconBackgroundColorForType(waypointType)
-				wp := OAWpt{
-					WptLat:      line[fieldIndexForString(csvLat)],
-					WptLon:      line[fieldIndexForString(csvLon)],
-					WptElevaton: line[fieldIndexForString(csvAltitude)],
-					WptTime:     line[fieldIndexForString(csvDateVerified)],
-					WptName:     line[fieldIndexForString(csvName)],
-					WptDesc:     createDescription(line),
-					WptType:     waypointType,
-					WptExtensions: OAWptExtensions{
-						WEIcon:           icon,
-						WEBackground:     background,
-						WEColor:          color,
-						WEAmenitySubtype: "user_defined_other_postcode",
-						WEAmenityType:    "user_defined_other",
-					},
+				wp := convertCsvLineToWaypoint(line)
+				if validateWaypoint(wp) {
+					waypoints = append(waypoints, wp)
+				} else {
+					log.Println("Discarded Waypoint: ", wp)
 				}
-				// TODO: Discard waypoint if it failed validation
-				waypoints = append(waypoints, wp)
 			}
 		}
-
 	}
 	return waypoints
+}
+
+func convertCsvLineToWaypoint(line []string) OAWpt {
+	// TODO: Make sure the category is in a supported list
+	waypointType := line[fieldIndexForString(csvCategory)]
+	icon, color, background := iconBackgroundColorForType(waypointType)
+	wp := OAWpt{
+		WptLat:      line[fieldIndexForString(csvLat)],
+		WptLon:      line[fieldIndexForString(csvLon)],
+		WptElevaton: line[fieldIndexForString(csvAltitude)],
+		WptTime:     line[fieldIndexForString(csvDateVerified)],
+		WptName:     line[fieldIndexForString(csvName)],
+		WptDesc:     createDescription(line),
+		WptType:     waypointType,
+		WptExtensions: OAWptExtensions{
+			WEIcon:           icon,
+			WEBackground:     background,
+			WEColor:          color,
+			WEAmenitySubtype: "user_defined_other_postcode",
+			WEAmenityType:    "user_defined_other",
+		},
+	}
+	return wp
 }
 
 func coordinateBoundaries(boundaries map[string]float64) (float64, float64, float64, float64) {
