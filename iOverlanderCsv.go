@@ -18,7 +18,7 @@ const csvLat = "Latitude"
 const csvLon = "Longitude"
 const csvAltitude = "Altitude"
 const csvDateVerified = "Date verified"
-const csvOpwn = "Open"
+const csvOpen = "Open"
 const csvElectricity = "Electricity"
 const csvWifi = "WiFi"
 const csvKitchen = "Kitchen"
@@ -59,7 +59,7 @@ func fieldIndexForString(s string) int {
 		csvLon:               6,
 		csvAltitude:          7,
 		csvDateVerified:      8,
-		csvOpwn:              9,
+		csvOpen:              9,
 		csvElectricity:       10,
 		csvWifi:              11,
 		csvKitchen:           12,
