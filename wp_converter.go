@@ -97,8 +97,6 @@ func convert(infile string, outfile string, mapBoundaries map[string]float64) {
 }
 
 func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []OAGroup) {
-	// TODO: Make sure to set places that are marked as not open to a different color
-
 	data := readCvsData(infile)
 	lonMin, lonMax, latMin, latMax := coordinateBoundaries(mapBoundaries)
 
@@ -107,25 +105,30 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 	var discardedWaypoints []OAWpt
 
 	for i, line := range data {
-		if i > 0 && validateCsvLine(line) {
+		var columnIndexMap = make(map[string]int)
+		if i == 0 {
+			// read out the first line and create a map with "index => column name"
+			for j, column := range line {
+				columnIndexMap[column] = j
+			}
+		}
+		if i > 0 && validateCsvLine(line, columnIndexMap) {
 			// Currently I'm relying on above line validation, therefore not handling
 			// the parse errors
-			currentLineLon, _ := strconv.ParseFloat(line[fieldIndexForString(csvLon)], 8)
-			currentLineLat, _ := strconv.ParseFloat(line[fieldIndexForString(csvLat)], 8)
+			currentLineLon, _ := strconv.ParseFloat(line[columnIndexMap[csvLon]], 8)
+			currentLineLat, _ := strconv.ParseFloat(line[columnIndexMap[csvLat]], 8)
 			if currentLineLon > lonMin && currentLineLon < lonMax &&
 				currentLineLat > latMin && currentLineLat < latMax {
-				wp := convertCsvLineToWaypoint(line)
+				wp := convertCsvLineToWaypoint(line, columnIndexMap)
 				if validateWaypoint(wp) {
 					waypoints = append(waypoints, wp)
-					// TODO: Check the map whether the entry already exists
-
-					// Create a map of categories to dynamically fill the OsmAnd
-					// Point Group
-					categoryMap[wp.WptType] = OAGroup{
-						GIcon:       wp.WptExtensions.WEIcon,
-						GBackground: wp.WptExtensions.WEBackground,
-						GColor:      wp.WptExtensions.WEColor,
-						GName:       wp.WptType,
+					if categoryMap[wp.WptType].GName == "" {
+						categoryMap[wp.WptType] = OAGroup{
+							GIcon:       wp.WptExtensions.WEIcon,
+							GBackground: wp.WptExtensions.WEBackground,
+							GColor:      wp.WptExtensions.WEColor,
+							GName:       wp.WptType,
+						}
 					}
 				} else {
 					discardedWaypoints = append(discardedWaypoints, wp)
@@ -135,7 +138,9 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 		}
 	}
 
-	log.Printf("Due to validation errors, %d waypoints were discarded\n", len(discardedWaypoints))
+	if len(discardedWaypoints) > 0 {
+		log.Printf("Due to validation errors, %d waypoints were discarded\n", len(discardedWaypoints))
+	}
 
 	var groups []OAGroup
 	for category := range categoryMap {
@@ -144,16 +149,22 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 	return waypoints, groups
 }
 
-func convertCsvLineToWaypoint(line []string) OAWpt {
-	waypointType := line[fieldIndexForString(csvCategory)]
+func convertCsvLineToWaypoint(line []string, columnIndexMap map[string]int) OAWpt {
+	waypointType := line[columnIndexMap[csvCategory]]
 	icon, color, background := iconBackgroundColorForType(waypointType)
+
+	// make places, that aren't open have grey symbols
+	if line[columnIndexMap[csvOpen]] != "Yes" {
+		color = "#aaaaaa"
+	}
+
 	wp := OAWpt{
-		WptLat:      line[fieldIndexForString(csvLat)],
-		WptLon:      line[fieldIndexForString(csvLon)],
-		WptElevaton: line[fieldIndexForString(csvAltitude)],
-		WptTime:     line[fieldIndexForString(csvDateVerified)],
-		WptName:     line[fieldIndexForString(csvName)],
-		WptDesc:     createDescription(line),
+		WptLat:      line[columnIndexMap[csvLat]],
+		WptLon:      line[columnIndexMap[csvLon]],
+		WptElevaton: line[columnIndexMap[csvAltitude]],
+		WptTime:     line[columnIndexMap[csvDateVerified]],
+		WptName:     line[columnIndexMap[csvName]],
+		WptDesc:     createDescription(line, columnIndexMap),
 		WptType:     waypointType,
 		WptExtensions: OAWptExtensions{
 			WEIcon:           icon,
@@ -185,20 +196,24 @@ func coordinateBoundaries(boundaries map[string]float64) (float64, float64, floa
 	return lonMin, lonMax, latMin, latMax
 }
 
-func createDescription(line []string) string {
+func createDescription(line []string, columnIndexMap map[string]int) string {
 	// TODO: use category field to determine which fields to combine
+	// for other categories than just campsites
 
 	var campsiteFields = []string{
-		csvDateVerified, csvOpwn, csvElectricity, csvWifi, csvKitchen, csvParking,
+		csvDateVerified, csvOpen, csvElectricity, csvWifi, csvKitchen, csvParking,
 		csvRestaurant, csvShowers, csvWater, csvToilets, csvBigRig, csvTent, csvPets, csvSani,
 	}
 	var desc string
-	// TODO: Handle empty fields properly
-	desc = line[fieldIndexForString(csvDescription)] + "\n\n"
+	desc = line[columnIndexMap[csvDescription]] + "\n\n"
 
-	for _, f := range campsiteFields {
-		// TODO: Handle empty fields properly
-		desc += f + ": " + line[fieldIndexForString(f)] + "\n"
+	if isValueInList(line[columnIndexMap[csvCategory]],
+		[]string{"Informal Campsite", "Established Campground", "Wild Camping"}) {
+		for _, f := range campsiteFields {
+			if line[columnIndexMap[f]] != "" {
+				desc += f + ": " + line[columnIndexMap[f]] + "\n"
+			}
+		}
 	}
 
 	return desc
