@@ -104,8 +104,8 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 	var waypoints []OAWpt
 	var discardedWaypoints []OAWpt
 
+	var columnIndexMap = make(map[string]int)
 	for i, line := range data {
-		var columnIndexMap = make(map[string]int)
 		if i == 0 {
 			// read out the first line and create a map with "index => column name"
 			for j, column := range line {
@@ -113,8 +113,6 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 			}
 		}
 		if i > 0 && validateCsvLine(line, columnIndexMap) {
-			// Currently I'm relying on above line validation, therefore not handling
-			// the parse errors
 			currentLineLon, _ := strconv.ParseFloat(line[columnIndexMap[csvLon]], 8)
 			currentLineLat, _ := strconv.ParseFloat(line[columnIndexMap[csvLat]], 8)
 			if currentLineLon > lonMin && currentLineLon < lonMax &&
@@ -155,6 +153,7 @@ func convertCsvLineToWaypoint(line []string, columnIndexMap map[string]int) OAWp
 
 	// make places, that aren't open have grey symbols
 	if line[columnIndexMap[csvOpen]] != "Yes" {
+		fmt.Println("Setting line color to grey")
 		color = "#aaaaaa"
 	}
 
@@ -194,27 +193,4 @@ func coordinateBoundaries(boundaries map[string]float64) (float64, float64, floa
 
 	validateCoordinateBoundaries(lonMin, lonMax, latMin, latMax)
 	return lonMin, lonMax, latMin, latMax
-}
-
-func createDescription(line []string, columnIndexMap map[string]int) string {
-	// TODO: use category field to determine which fields to combine
-	// for other categories than just campsites
-
-	var campsiteFields = []string{
-		csvDateVerified, csvOpen, csvElectricity, csvWifi, csvKitchen, csvParking,
-		csvRestaurant, csvShowers, csvWater, csvToilets, csvBigRig, csvTent, csvPets, csvSani,
-	}
-	var desc string
-	desc = line[columnIndexMap[csvDescription]] + "\n\n"
-
-	if isValueInList(line[columnIndexMap[csvCategory]],
-		[]string{"Informal Campsite", "Established Campground", "Wild Camping"}) {
-		for _, f := range campsiteFields {
-			if line[columnIndexMap[f]] != "" {
-				desc += f + ": " + line[columnIndexMap[f]] + "\n"
-			}
-		}
-	}
-
-	return desc
 }

@@ -77,3 +77,28 @@ func validateCsvLine(line []string, columnIndexMap map[string]int) bool {
 		validateStringParsesToFloat(line[columnIndexMap[csvLon]]) &&
 		validateNotEmptyString(line[columnIndexMap[csvCategory]])
 }
+
+func descriptionFieldsForCategory(category string) []string {
+	if isValueInList(category, []string{"Informal Campsite", "Established Campground", "Wild Camping"}) {
+		return []string{
+			csvDateVerified, csvOpen, csvElectricity, csvWifi, csvKitchen, csvParking,
+			csvRestaurant, csvShowers, csvWater, csvToilets, csvBigRig, csvTent, csvPets, csvSani,
+		}
+	}
+	// Default values
+	return []string{csvDateVerified, csvOpen}
+}
+
+func createDescription(line []string, columnIndexMap map[string]int) string {
+	var desc string
+	desc = line[columnIndexMap[csvDescription]] + "\n\n"
+
+	fieldListForCategory := descriptionFieldsForCategory(line[columnIndexMap[csvCategory]])
+	for _, f := range fieldListForCategory {
+		if line[columnIndexMap[f]] != "" {
+			desc += f + ": " + line[columnIndexMap[f]] + "\n"
+		}
+	}
+
+	return desc
+}
