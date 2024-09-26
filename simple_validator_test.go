@@ -61,6 +61,9 @@ func TestValidateCoordinateBoundaries(t *testing.T) {
 	r, m = validateCoordinateBoundaries(minLon, maxLon, minLat, tooLargeLat)
 	outputTestResult(false, r, m, t)
 
+	r, m = validateCoordinateBoundaries(maxLon, minLon, maxLat, minLat)
+	outputTestResult(false, r, m, t)
+
 	// and finally a good one
 	r, m = validateCoordinateBoundaries(minLon, maxLon, minLat, maxLat)
 	outputTestResult(true, r, m, t)
