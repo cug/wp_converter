@@ -22,11 +22,11 @@ func writeToFile(b []byte, filename string) {
 		fmt.Printf("%s", b)
 	} else {
 		err := os.WriteFile(filename, b, 0644)
-		checkForError(err)
+		panicOnError(err)
 	}
 }
 
-func checkForError(e error) {
+func panicOnError(e error) {
 	if e != nil {
 		panic(e)
 	}

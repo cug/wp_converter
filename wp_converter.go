@@ -34,7 +34,7 @@ func readArguments() (string, string, map[string]float64) {
 					key := v[0][2:]
 					if isValueInList(key, validArgumentNames) {
 						value, err := strconv.ParseFloat(v[1], 8)
-						checkForError(err)
+						panicOnError(err)
 						boundaryArguments[key] = value
 					} else {
 						log.Fatal("Invalid boundary argument ", key)
