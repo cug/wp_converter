@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"strconv"
 )
 
@@ -14,7 +13,7 @@ func validateStringParsesToFloat(s string) bool {
 	return err == nil
 }
 
-func validateCoordinateBoundaries(lonMin float64, lonMax float64, latMin float64, latMax float64) {
+func validateCoordinateBoundaries(lonMin float64, lonMax float64, latMin float64, latMax float64) (bool, string) {
 	var message = ""
 	if lonMin > lonMax {
 		message += "\nlonMin > lonMax"
@@ -34,7 +33,5 @@ func validateCoordinateBoundaries(lonMin float64, lonMax float64, latMin float64
 	if latMax < -90.0 || latMax > 90.0 {
 		message += "\nlatMax out of bounds"
 	}
-	if message != "" {
-		log.Fatal(message)
-	}
+	return message == "", message
 }

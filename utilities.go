@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -46,6 +47,10 @@ func coordinateBoundaries(boundaries map[string]float64) (float64, float64, floa
 		latMax = boundaries["latMax"]
 	}
 
-	validateCoordinateBoundaries(lonMin, lonMax, latMin, latMax)
+	r, message := validateCoordinateBoundaries(lonMin, lonMax, latMin, latMax)
+	if !r {
+		log.Fatal("Coordinates invalid\n")
+		log.Fatal(message)
+	}
 	return lonMin, lonMax, latMin, latMax
 }
