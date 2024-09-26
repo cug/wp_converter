@@ -109,9 +109,10 @@ func convertCsvLineToWaypoint(line []string, columnIndexMap map[string]int) OAWp
 		WptDesc:     createDescription(line, columnIndexMap),
 		WptType:     waypointType,
 		WptExtensions: OAWptExtensions{
-			WEIcon:           icon,
-			WEBackground:     background,
-			WEColor:          color,
+			WEIcon:       icon,
+			WEBackground: background,
+			WEColor:      color,
+			// TODO: Figure out whether the below are actually needed for anything
 			WEAmenitySubtype: "user_defined_other_postcode",
 			WEAmenityType:    "user_defined_other",
 		},
