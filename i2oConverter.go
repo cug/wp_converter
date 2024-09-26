@@ -61,7 +61,7 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 			if currentLineLon > lonMin && currentLineLon < lonMax &&
 				currentLineLat > latMin && currentLineLat < latMax {
 				wp := convertCsvLineToWaypoint(line, columnIndexMap)
-				if validateWaypoint(wp) {
+				if validateWaypoint(wp, false) {
 					waypoints = append(waypoints, wp)
 					if categoryMap[wp.WptType].GName == "" {
 						categoryMap[wp.WptType] = OAGroup{

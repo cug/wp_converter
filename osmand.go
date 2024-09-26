@@ -63,6 +63,19 @@ type OAGroup struct {
 	GName       string   `xml:"name,attr"`
 }
 
+func supportedPOITypes() []string {
+	return []string{
+		"Established Campground",
+		"Informal Campsite",
+		"Wild Camping",
+		"Water",
+		"Mechanic and Parts",
+		"Shopping",
+		"Laundromat",
+		"Fuel Station",
+	}
+}
+
 func iconBackgroundColorForType(t string) (string, string, string) {
 	// TODO: Make this configurable and more flexible
 	var icon, background, color string
@@ -108,8 +121,12 @@ func iconBackgroundColorForType(t string) (string, string, string) {
 	return icon, color, background
 }
 
-func validateWaypoint(wp OAWpt) bool {
+func validateWaypoint(wp OAWpt, enforceSupportedTypes bool) bool {
 	// This is likely not complete, but it's a start, better than nothing
+	var wpInSupportedTypes bool = true
+	if enforceSupportedTypes {
+		wpInSupportedTypes = isValueInList(wp.WptType, supportedPOITypes())
+	}
 	return validateNotEmptyString(wp.WptName) &&
 		validateNotEmptyString(wp.WptDesc) &&
 		validateNotEmptyString(wp.WptLat) &&
@@ -117,5 +134,6 @@ func validateWaypoint(wp OAWpt) bool {
 		validateStringParsesToFloat(wp.WptLon) &&
 		validateStringParsesToFloat(wp.WptLat) &&
 		validateNotEmptyString(wp.WptExtensions.WEIcon) &&
-		validateNotEmptyString(wp.WptExtensions.WEColor)
+		validateNotEmptyString(wp.WptExtensions.WEColor) &&
+		wpInSupportedTypes
 }
