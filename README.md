@@ -22,6 +22,14 @@ or
 go run . -i infile.csv -o outfile.gpx
 ```
 
+or limit to a coordinate boundary box (simple rectangle), this example provides the min/max values for a boundary box that does _not_ limit the points:
+
+```shell
+go run .-i infile.csv -o outfile.gpx --lonMin=-180.0 --lonMax=180.0 --latMin=-90.0 --latMax=90.0
+```
+
+If you need to limit to a smaller area, check a maps app (e.g. Google Maps)
+
 # Workflow
 
 - Download an iOverlander csv file for a country
