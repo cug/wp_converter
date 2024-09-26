@@ -30,3 +30,22 @@ func checkForError(e error) {
 		panic(e)
 	}
 }
+
+func coordinateBoundaries(boundaries map[string]float64) (float64, float64, float64, float64) {
+	lonMin, lonMax, latMin, latMax := -180.0, 180.0, -90.0, 90.0
+	if boundaries["lonMin"] != 0.0 {
+		lonMin = boundaries["lonMin"]
+	}
+	if boundaries["lonMax"] != 0.0 {
+		lonMax = boundaries["lonMax"]
+	}
+	if boundaries["latMin"] != 0.0 {
+		latMin = boundaries["latMin"]
+	}
+	if boundaries["latMax"] != 0.0 {
+		latMax = boundaries["latMax"]
+	}
+
+	validateCoordinateBoundaries(lonMin, lonMax, latMin, latMax)
+	return lonMin, lonMax, latMin, latMax
+}

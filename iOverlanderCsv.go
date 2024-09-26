@@ -102,3 +102,11 @@ func createDescription(line []string, columnIndexMap map[string]int) string {
 
 	return desc
 }
+
+func columnHeaders(line []string) map[string]int {
+	var columnIndexMap = make(map[string]int)
+	for i, column := range line {
+		columnIndexMap[column] = i
+	}
+	return columnIndexMap
+}
