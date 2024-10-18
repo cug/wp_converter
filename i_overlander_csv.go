@@ -79,7 +79,7 @@ func validateCsvLine(line []string, columnIndexMap map[string]int) bool {
 }
 
 func descriptionFieldsForCategory(category string) []string {
-	if isValueInList(category, []string{"Informal Campsite", "Established Campground", "Wild Camping"}) {
+	if isValueInList(category, &[]string{"Informal Campsite", "Established Campground", "Wild Camping"}) {
 		return []string{
 			csvDateVerified, csvOpen, csvElectricity, csvWifi, csvKitchen, csvParking,
 			csvRestaurant, csvShowers, csvWater, csvToilets, csvBigRig, csvTent, csvPets, csvSani,

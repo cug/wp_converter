@@ -63,8 +63,8 @@ type OAGroup struct {
 	GName       string   `xml:"name,attr"`
 }
 
-func supportedPOITypes() []string {
-	return []string{
+func supportedPOITypes() *[]string {
+	return &[]string{
 		"Established Campground",
 		"Informal Campsite",
 		"Wild Camping",

@@ -22,7 +22,7 @@ func main() {
 // or write the output to a file like this:
 // ./wp_converter -i infile.csv > outfile.gpx
 func readArguments() (string, string, map[string]float64) {
-	var infile, outfile string = "none", "none"
+	var infile, outfile = "none", "none"
 	var boundaryArguments = make(map[string]float64)
 	validArgumentNames := []string{"lonMin", "lonMax", "latMin", "latMax"}
 
@@ -32,7 +32,7 @@ func readArguments() (string, string, map[string]float64) {
 				v := strings.Split(a, "=")
 				if len(v) == 2 {
 					key := v[0][2:]
-					if isValueInList(key, validArgumentNames) {
+					if isValueInList(key, &validArgumentNames) {
 						value, err := strconv.ParseFloat(v[1], 8)
 						panicOnError(err)
 						boundaryArguments[key] = value
