@@ -9,43 +9,47 @@ import (
 // Constants for CSV fields, these need to match the column headers
 // in the first line of the CSV file, so they can be mapped via
 // value for key lookup
-const csvId = "Id"
-const csvLocation = "Location"
-const csvName = "Name"
-const csvCategory = "Category"
-const csvDescription = "Description"
-const csvLat = "Latitude"
-const csvLon = "Longitude"
-const csvAltitude = "Altitude"
-const csvDateVerified = "Date verified"
-const csvOpen = "Open"
-const csvElectricity = "Electricity"
-const csvWifi = "Wifi"
-const csvKitchen = "Kitchen"
-const csvParking = "Parking"
-const csvRestaurant = "Restaurant"
-const csvShowers = "Showers"
-const csvWater = "Water"
-const csvToilets = "Toilets"
-const csvBigRig = "Big rig friendly"
-const csvTent = "Tent friendly"
-const csvPets = "Pet friendly"
-const csvSani = "Sanitation dump station"
-const csvOutdoorGear = "Outdoor gear"
-const csvGroceries = "Groceries"
-const csvArtisan = "Artisan goods"
-const csvBakery = "Bakery"
-const csvRarity = "Rarity in this area"
-const csvRepairsVehicle = "Repairs vehicles"
-const csvRepairsMotorcycle = "Repairs motorcycles"
-const csvRepairsBicycle = "Repairs bicycles"
-const csvSellsParts = "Sells parts"
-const csvRecyclesBatteries = "Recycles batteries"
-const csvRecyclesOil = "Recycles oil"
-const csvBioFuel = "Bio fuel"
-const csvEvCharging = "Electric vehicle charging"
-const csvCompostSawdust = "Composting sawdust"
-const csvRecycleCenter = "Recycling center"
+const (
+	csvId                = "Id"
+	csvLocation          = "Location"
+	csvName              = "Name"
+	csvCategory          = "Category"
+	csvDescription       = "Description"
+	csvLat               = "Latitude"
+	csvLon               = "Longitude"
+	csvAltitude          = "Altitude"
+	csvDateVerified      = "Date verified"
+	csvOpen              = "Open"
+	csvElectricity       = "Electricity"
+	csvWifi              = "Wifi"
+	csvKitchen           = "Kitchen"
+	csvParking           = "Parking"
+	csvRestaurant        = "Restaurant"
+	csvShowers           = "Showers"
+	csvWater             = "Water"
+	csvToilets           = "Toilets"
+	csvBigRig            = "Big rig friendly"
+	csvTent              = "Tent friendly"
+	csvPets              = "Pet friendly"
+	csvSani              = "Sanitation dump station"
+	csvOutdoorGear       = "Outdoor gear"
+	csvGroceries         = "Groceries"
+	csvArtisan           = "Artisan goods"
+	csvBakery            = "Bakery"
+	csvRarity            = "Rarity in this area"
+	csvRepairsVehicle    = "Repairs vehicles"
+	csvRepairsMotorcycle = "Repairs motorcycles"
+	csvRepairsBicycle    = "Repairs bicycles"
+	csvSellsParts        = "Sells parts"
+	csvRecyclesBatteries = "Recycles batteries"
+	csvRecyclesOil       = "Recycles oil"
+	csvBioFuel           = "Bio fuel"
+	csvEvCharging        = "Electric vehicle charging"
+	csvCompostSawdust    = "Composting sawdust"
+	csvRecycleCenter     = "Recycling center"
+)
+
+const baseUrlForDesc string = "https://ioverlander.com/places/"
 
 func readCvsData(filename string) [][]string {
 	f, err := os.Open(filename)
@@ -99,12 +103,13 @@ func createDescription(line []string, columnIndexMap map[string]int) string {
 			desc += f + ": " + line[columnIndexMap[f]] + "\n"
 		}
 	}
+	desc += "\n" + baseUrlForDesc + line[columnIndexMap[csvId]] + "\n"
 
 	return desc
 }
 
 func columnHeaderIndexMap(line []string) map[string]int {
-	var columnIndexMap = make(map[string]int)
+	columnIndexMap := make(map[string]int)
 	for i, column := range line {
 		columnIndexMap[column] = i
 	}

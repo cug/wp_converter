@@ -36,7 +36,7 @@ func convertIOverlanderToOsmAnd(infile string, outfile string, mapBoundaries map
 	}
 
 	// Not very elegant, but it works, maybe I'll learn a better way later
-	var converted = []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
+	converted := []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
 	converted = append(converted, xmlData...)
 	converted = append(converted, "\n"...)
 
@@ -47,7 +47,7 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 	data := readCvsData(infile)
 	lonMin, lonMax, latMin, latMax := coordinateBoundaries(mapBoundaries)
 
-	var categoryMap = make(map[string]OAGroup)
+	categoryMap := make(map[string]OAGroup)
 	var waypoints []OAWpt
 	var discardedWaypoints []OAWpt
 
@@ -56,8 +56,8 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 
 	for i, line := range data {
 		if i > 0 && validateCsvLine(line, columnIndexMap) {
-			currentLineLon, _ := strconv.ParseFloat(line[columnIndexMap[csvLon]], 8)
-			currentLineLat, _ := strconv.ParseFloat(line[columnIndexMap[csvLat]], 8)
+			currentLineLon, _ := strconv.ParseFloat(line[columnIndexMap[csvLon]], 64)
+			currentLineLat, _ := strconv.ParseFloat(line[columnIndexMap[csvLat]], 64)
 			if currentLineLon > lonMin && currentLineLon < lonMax &&
 				currentLineLat > latMin && currentLineLat < latMax {
 				wp := convertCsvLineToWaypoint(line, columnIndexMap)

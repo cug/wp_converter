@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	var infile, outfile, mapBoundaries = readArguments()
+	infile, outfile, mapBoundaries := readArguments()
 	if infile == "none" {
 		log.Fatal("no input file")
 	}
@@ -22,18 +22,19 @@ func main() {
 // or write the output to a file like this:
 // ./wp_converter -i infile.csv > outfile.gpx
 func readArguments() (string, string, map[string]float64) {
-	var infile, outfile string = "none", "none"
-	var boundaryArguments = make(map[string]float64)
+	infile, outfile := "none", "none"
+	boundaryArguments := make(map[string]float64)
 	validArgumentNames := []string{"lonMin", "lonMax", "latMin", "latMax"}
 
 	for i, a := range os.Args {
+		// 0 is the program name
 		if i > 0 {
 			if len(a) > 2 && a[:2] == "--" {
 				v := strings.Split(a, "=")
 				if len(v) == 2 {
 					key := v[0][2:]
 					if isValueInList(key, validArgumentNames) {
-						value, err := strconv.ParseFloat(v[1], 8)
+						value, err := strconv.ParseFloat(v[1], 64)
 						panicOnError(err)
 						boundaryArguments[key] = value
 					} else {
