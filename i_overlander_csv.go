@@ -103,7 +103,7 @@ func createDescription(line []string, columnIndexMap map[string]int) string {
 			desc += f + ": " + line[columnIndexMap[f]] + "\n"
 		}
 	}
-	desc += "\n" + baseUrlForDesc + line[columnIndexMap[csvId]] + "\n"
+	desc += "\n" + baseUrlForDesc + line[columnIndexMap[csvId]] + " (network required)" + "\n"
 
 	return desc
 }
