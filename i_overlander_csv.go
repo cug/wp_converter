@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"io"
 	"log"
 	"os"
 )
@@ -51,17 +52,21 @@ const (
 
 const baseUrlForDesc string = "https://ioverlander.com/places/"
 
+// readCvsData opens a CSV file by name and returns its contents as a slice of string slices.
 func readCvsData(filename string) [][]string {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// remember to close the file at the end of the program
 	defer f.Close()
 
-	// read csv values using csv.Reader
-	csvReader := csv.NewReader(f)
+	return parseCvsData(f)
+}
+
+// parseCvsData reads CSV data from the provided io.Reader and returns it as a slice of string slices.
+func parseCvsData(r io.Reader) [][]string {
+	csvReader := csv.NewReader(r)
+	csvReader.FieldsPerRecord = -1
 	data, err := csvReader.ReadAll()
 	if err != nil {
 		log.Fatal(err)
@@ -70,6 +75,7 @@ func readCvsData(filename string) [][]string {
 	return data
 }
 
+// validateCsvLine checks if a CSV line contains all the required fields and that coordinates are valid floats.
 func validateCsvLine(line []string, columnIndexMap map[string]int) bool {
 	// Probably neither great nor complete, but it's a start and I can
 	// add more validation as problem cases arise
@@ -82,6 +88,8 @@ func validateCsvLine(line []string, columnIndexMap map[string]int) bool {
 		validateNotEmptyString(line[columnIndexMap[csvCategory]])
 }
 
+// descriptionFieldsForCategory returns a list of CSV column names that should be included in the
+// waypoint description based on the category of the point of interest.
 func descriptionFieldsForCategory(category string) []string {
 	if isValueInList(category, []string{"Informal Campsite", "Established Campground", "Wild Camping"}) {
 		return []string{
@@ -93,6 +101,8 @@ func descriptionFieldsForCategory(category string) []string {
 	return []string{csvDateVerified, csvOpen}
 }
 
+// createDescription constructs a detailed description string for a waypoint, including
+// category-specific fields and a link back to the iOverlander website.
 func createDescription(line []string, columnIndexMap map[string]int) string {
 	var desc string
 	desc = line[columnIndexMap[csvDescription]] + "\n\n"
@@ -108,6 +118,7 @@ func createDescription(line []string, columnIndexMap map[string]int) string {
 	return desc
 }
 
+// columnHeaderIndexMap creates a mapping from CSV column headers to their respective column indices.
 func columnHeaderIndexMap(line []string) map[string]int {
 	columnIndexMap := make(map[string]int)
 	for i, column := range line {

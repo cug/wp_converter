@@ -1,2 +1,4 @@
 .DS_Store
 wp_converter
+coverage.out
+output.gpx

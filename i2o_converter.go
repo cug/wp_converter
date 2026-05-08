@@ -3,12 +3,17 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
+	"io"
 	"log"
 	"strconv"
 )
 
-func convertIOverlanderToOsmAnd(infile string, outfile string, mapBoundaries map[string]float64) {
-	waypoints, groups := convertLines(infile, mapBoundaries)
+// convertIOverlanderToOsmAnd reads CSV data from r, processes it into waypoints
+// filtered by mapBoundaries, and writes the resulting OsmAnd-compatible GPX
+// data to w.
+func convertIOverlanderToOsmAnd(r io.Reader, w io.Writer, mapBoundaries map[string]float64) {
+	data := parseCvsData(r)
+	waypoints, groups := processLines(data, mapBoundaries)
 
 	gpx := OAGpx{
 		Version:    "OsmAnd 4.6.6",
@@ -40,11 +45,13 @@ func convertIOverlanderToOsmAnd(infile string, outfile string, mapBoundaries map
 	converted = append(converted, xmlData...)
 	converted = append(converted, "\n"...)
 
-	writeToFile(converted, outfile)
+	writeToWriter(w, converted)
 }
 
-func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []OAGroup) {
-	data := readCvsData(infile)
+// processLines iterates through the CSV data, filters waypoints based on the provided
+// coordinate boundaries, and groups them by category. It returns a slice of
+// waypoints and a slice of the associated category groups.
+func processLines(data [][]string, mapBoundaries map[string]float64) ([]OAWpt, []OAGroup) {
 	lonMin, lonMax, latMin, latMax := coordinateBoundaries(mapBoundaries)
 
 	categoryMap := make(map[string]OAGroup)
@@ -90,6 +97,9 @@ func convertLines(infile string, mapBoundaries map[string]float64) ([]OAWpt, []O
 	return waypoints, groups
 }
 
+// convertCsvLineToWaypoint transforms a single CSV line into an OAWpt struct,
+// mapping CSV columns to GPX fields and assigning icons/colors based on the
+// waypoint category.
 func convertCsvLineToWaypoint(line []string, columnIndexMap map[string]int) OAWpt {
 	waypointType := line[columnIndexMap[csvCategory]]
 	icon, color, background := iconBackgroundColorForType(waypointType)

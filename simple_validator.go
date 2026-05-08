@@ -8,6 +8,7 @@ func validateNotEmptyString(s string) bool {
 	return s != ""
 }
 
+// validateStringParsesToFloat returns true if the string can be parsed as a 64-bit float.
 func validateStringParsesToFloat(s string) bool {
 	_, err := strconv.ParseFloat(s, 64)
 	return err == nil

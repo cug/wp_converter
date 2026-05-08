@@ -63,6 +63,8 @@ type OAGroup struct {
 	GName       string   `xml:"name,attr"`
 }
 
+// supportedPOITypes returns a list of POI categories that are officially supported
+// by the converter with specific icon and color mappings.
 func supportedPOITypes() []string {
 	return []string{
 		"Established Campground",
@@ -76,6 +78,8 @@ func supportedPOITypes() []string {
 	}
 }
 
+// iconBackgroundColorForType maps a POI category to its corresponding OsmAnd
+// icon name, color hex code, and background shape.
 func iconBackgroundColorForType(t string) (string, string, string) {
 	// TODO: Make this configurable and more flexible
 	var icon, background, color string
@@ -121,6 +125,8 @@ func iconBackgroundColorForType(t string) (string, string, string) {
 	return icon, color, background
 }
 
+// validateWaypoint checks if a waypoint has all the required fields and valid coordinates.
+// If enforceSupportedTypes is true, it also verifies that the waypoint category is in the supported list.
 func validateWaypoint(wp OAWpt, enforceSupportedTypes bool) bool {
 	// This is likely not complete, but it's a start, better than nothing
 	var wpInSupportedTypes bool = true
