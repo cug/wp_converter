@@ -16,14 +16,14 @@ func convertIOverlanderToOsmAnd(r io.Reader, w io.Writer, mapBoundaries map[stri
 	waypoints, groups := processLines(data, mapBoundaries)
 
 	gpx := OAGpx{
-		Version:    "OsmAnd 4.6.6",
-		Creator:    "OsmAnd Maps 4.6.6 (4.6.6.1)",
-		BaseNS:     "https://www.topografix.com/GPX/1/1/",
-		OsmNS:      "https://osmand.net",
-		Namepace:   "https://www.garmin.com/xmlschemas/TrackPointExtension/v1",
-		Xsi:        "https://www.w3.org/2001/XMLSchema-instance",
-		XsiLocaton: "https://www.topografix.com/GPX/1/1/gpx.xsd",
-		Waypoints:  waypoints,
+		Version:     "OsmAnd 4.6.6",
+		Creator:     "OsmAnd Maps 4.6.6 (4.6.6.1)",
+		BaseNS:      "https://www.topografix.com/GPX/1/1/",
+		OsmNS:       "https://osmand.net",
+		Namespace:   "https://www.garmin.com/xmlschemas/TrackPointExtension/v1",
+		Xsi:         "https://www.w3.org/2001/XMLSchema-instance",
+		XsiLocation: "https://www.topografix.com/GPX/1/1/gpx.xsd",
+		Waypoints:   waypoints,
 		Metadata: OAGpxMetadata{
 			Name:   "favorites",
 			GMTime: "1970-01-01T08:00:00Z",
@@ -40,42 +40,43 @@ func convertIOverlanderToOsmAnd(r io.Reader, w io.Writer, mapBoundaries map[stri
 		return
 	}
 
-	// Not very elegant, but it works, maybe I'll learn a better way later
-	converted := []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
-	converted = append(converted, xmlData...)
-	converted = append(converted, "\n"...)
+	// Prepend XML declaration to the marshaled data
+	converted := append([]byte(xml.Header), xmlData...)
+	converted = append(converted, '\n')
 
-	writeToWriter(w, converted)
+	if err := writeToWriter(w, converted); err != nil {
+		fmt.Printf("Error writing output: %v\n", err)
+	}
 }
 
 // processLines iterates through the CSV data, filters waypoints based on the provided
 // coordinate boundaries, and groups them by category. It returns a slice of
 // waypoints and a slice of the associated category groups.
-func processLines(data [][]string, mapBoundaries map[string]float64) ([]OAWpt, []OAGroup) {
-	lonMin, lonMax, latMin, latMax := coordinateBoundaries(mapBoundaries)
+func processLines(data []IOPlace, mapBoundaries map[string]float64) ([]OAWpt, []OAGroup) {
+	lonMin, lonMax, latMin, latMax, err := coordinateBoundaries(mapBoundaries)
+	if err != nil {
+		log.Fatalf("Error validating boundaries: %v", err)
+	}
 
 	categoryMap := make(map[string]OAGroup)
 	var waypoints []OAWpt
 	var discardedWaypoints []OAWpt
 
-	// Use first line in CSV field to create a map between column names and their index
-	columnIndexMap := columnHeaderIndexMap(data[0])
-
-	for i, line := range data {
-		if i > 0 && validateCsvLine(line, columnIndexMap) {
-			currentLineLon, _ := strconv.ParseFloat(line[columnIndexMap[csvLon]], 64)
-			currentLineLat, _ := strconv.ParseFloat(line[columnIndexMap[csvLat]], 64)
+	for _, p := range data {
+		if validateCsvLine(p) {
+			currentLineLon, _ := strconv.ParseFloat(p.Lon, 64)
+			currentLineLat, _ := strconv.ParseFloat(p.Lat, 64)
 			if currentLineLon > lonMin && currentLineLon < lonMax &&
 				currentLineLat > latMin && currentLineLat < latMax {
-				wp := convertCsvLineToWaypoint(line, columnIndexMap)
+				wp := convertCsvLineToWaypoint(p)
 				if validateWaypoint(wp, false) {
 					waypoints = append(waypoints, wp)
-					if categoryMap[wp.WptType].GName == "" {
-						categoryMap[wp.WptType] = OAGroup{
-							GIcon:       wp.WptExtensions.WEIcon,
-							GBackground: wp.WptExtensions.WEBackground,
-							GColor:      wp.WptExtensions.WEColor,
-							GName:       wp.WptType,
+					if categoryMap[wp.Type].Name == "" {
+						categoryMap[wp.Type] = OAGroup{
+							Icon:       wp.Extensions.Icon,
+							Background: wp.Extensions.Background,
+							Color:      wp.Extensions.Color,
+							Name:       wp.Type,
 						}
 					}
 				} else {
@@ -100,31 +101,31 @@ func processLines(data [][]string, mapBoundaries map[string]float64) ([]OAWpt, [
 // convertCsvLineToWaypoint transforms a single CSV line into an OAWpt struct,
 // mapping CSV columns to GPX fields and assigning icons/colors based on the
 // waypoint category.
-func convertCsvLineToWaypoint(line []string, columnIndexMap map[string]int) OAWpt {
-	waypointType := line[columnIndexMap[csvCategory]]
+func convertCsvLineToWaypoint(p IOPlace) OAWpt {
+	waypointType := p.Category
 	icon, color, background := iconBackgroundColorForType(waypointType)
 
 	// make places, that aren't open have grey symbols
-	if line[columnIndexMap[csvOpen]] != "Yes" {
+	if p.Open != "Yes" {
 		fmt.Println("Setting line color to grey")
 		color = "#aaaaaa"
 	}
 
 	wp := OAWpt{
-		WptLat:      line[columnIndexMap[csvLat]],
-		WptLon:      line[columnIndexMap[csvLon]],
-		WptElevaton: line[columnIndexMap[csvAltitude]],
-		WptTime:     line[columnIndexMap[csvDateVerified]],
-		WptName:     line[columnIndexMap[csvName]],
-		WptDesc:     createDescription(line, columnIndexMap),
-		WptType:     waypointType,
-		WptExtensions: OAWptExtensions{
-			WEIcon:       icon,
-			WEBackground: background,
-			WEColor:      color,
+		Lat:         p.Lat,
+		Lon:         p.Lon,
+		Elevation:   p.Altitude,
+		Time:        p.DateVerified,
+		Name:        p.Name,
+		Description: createDescription(p),
+		Type:        waypointType,
+		Extensions: OAWptExtensions{
+			Icon:       icon,
+			Background: background,
+			Color:      color,
 			// TODO: Figure out whether the below are actually needed for anything
-			WEAmenitySubtype: "user_defined_other_postcode",
-			WEAmenityType:    "user_defined_other",
+			AmenitySubtype: "user_defined_other_postcode",
+			AmenityType:    "user_defined_other",
 		},
 	}
 	return wp

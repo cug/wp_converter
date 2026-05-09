@@ -52,7 +52,10 @@ func TestCoordinateBoundaries(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			lonMin, lonMax, latMin, latMax := coordinateBoundaries(tc.boundaries)
+			lonMin, lonMax, latMin, latMax, err := coordinateBoundaries(tc.boundaries)
+			if err != nil {
+				t.Fatalf("coordinateBoundaries failed: %v", err)
+			}
 			if lonMin != tc.expected[0] || lonMax != tc.expected[1] || latMin != tc.expected[2] || latMax != tc.expected[3] {
 				t.Errorf("coordinateBoundaries(%v) = %v, %v, %v, %v; want %v", tc.boundaries, lonMin, lonMax, latMin, latMax, tc.expected)
 			}
@@ -89,13 +92,13 @@ func TestIconBackgroundColorForType(t *testing.T) {
 
 func TestValidateWaypoint(t *testing.T) {
 	validWp := OAWpt{
-		WptName: "Test Place",
-		WptDesc: "Test Description",
-		WptLat:  "50.0",
-		WptLon:  "10.0",
-		WptExtensions: OAWptExtensions{
-			WEIcon:  "icon",
-			WEColor: "color",
+		Name:        "Test Place",
+		Description: "Test Description",
+		Lat:         "50.0",
+		Lon:         "10.0",
+		Extensions: OAWptExtensions{
+			Icon:  "icon",
+			Color: "color",
 		},
 	}
 
@@ -107,7 +110,7 @@ func TestValidateWaypoint(t *testing.T) {
 
 	t.Run("Invalid name", func(t *testing.T) {
 		wp := validWp
-		wp.WptName = ""
+		wp.Name = ""
 		if validateWaypoint(wp, false) {
 			t.Error("validateWaypoint should return false for empty name")
 		}
@@ -115,7 +118,7 @@ func TestValidateWaypoint(t *testing.T) {
 
 	t.Run("Invalid lat", func(t *testing.T) {
 		wp := validWp
-		wp.WptLat = "not-a-float"
+		wp.Lat = "not-a-float"
 		if validateWaypoint(wp, false) {
 			t.Error("validateWaypoint should return false for invalid latitude")
 		}
@@ -123,7 +126,7 @@ func TestValidateWaypoint(t *testing.T) {
 
 	t.Run("Enforce supported types - valid", func(t *testing.T) {
 		wp := validWp
-		wp.WptType = "Water"
+		wp.Type = "Water"
 		if !validateWaypoint(wp, true) {
 			t.Error("validateWaypoint should return true for supported type")
 		}
@@ -131,7 +134,7 @@ func TestValidateWaypoint(t *testing.T) {
 
 	t.Run("Enforce supported types - invalid", func(t *testing.T) {
 		wp := validWp
-		wp.WptType = "Unknown Type"
+		wp.Type = "Unknown Type"
 		if validateWaypoint(wp, true) {
 			t.Error("validateWaypoint should return false for unsupported type")
 		}
@@ -146,48 +149,44 @@ func TestColumnHeaderIndexMap(t *testing.T) {
 	}
 }
 
-func TestDescriptionFieldsForCategory(t *testing.T) {
-	t.Run("Campground category", func(t *testing.T) {
-		fields := descriptionFieldsForCategory("Established Campground")
-		if len(fields) < 5 {
-			t.Errorf("Expected more fields for campground, got %d", len(fields))
-		}
-	})
-
-	t.Run("Default category", func(t *testing.T) {
-		fields := descriptionFieldsForCategory("Other")
-		if len(fields) != 2 {
-			t.Errorf("Expected 2 fields for default category, got %d", len(fields))
-		}
-	})
-}
-
 func TestCreateDescription(t *testing.T) {
+	p := IOPlace{
+		ID:           "123",
+		Description:  "Nice place",
+		Category:     "Other",
+		DateVerified: "2024-01-01",
+		Open:         "Yes",
+	}
 
-	m := map[string]int{"Id": 0, "Description": 1, "Category": 2, "Date verified": 3, "Open": 4}
-	line := []string{"123", "Nice place", "Other", "2024-01-01", "Yes"}
-
-	desc := createDescription(line, m)
+	desc := createDescription(p)
 	if !strings.Contains(desc, "Nice place") || !strings.Contains(desc, "123") {
 		t.Errorf("createDescription output missing info: %q", desc)
 	}
 }
 
 func TestValidateCsvLine(t *testing.T) {
-	m := map[string]int{
-		"Name": 0, "Description": 1, "Latitude": 2, "Longitude": 3, "Category": 4,
-	}
-
 	t.Run("Valid line", func(t *testing.T) {
-		line := []string{"Place", "Desc", "50.0", "10.0", "Campground"}
-		if !validateCsvLine(line, m) {
+		p := IOPlace{
+			Name:        "Place",
+			Description: "Desc",
+			Lat:         "50.0",
+			Lon:         "10.0",
+			Category:    "Campground",
+		}
+		if !validateCsvLine(p) {
 			t.Error("validateCsvLine should return true for valid line")
 		}
 	})
 
 	t.Run("Invalid lat", func(t *testing.T) {
-		line := []string{"Place", "Desc", "abc", "10.0", "Campground"}
-		if validateCsvLine(line, m) {
+		p := IOPlace{
+			Name:        "Place",
+			Description: "Desc",
+			Lat:         "abc",
+			Lon:         "10.0",
+			Category:    "Campground",
+		}
+		if validateCsvLine(p) {
 			t.Error("validateCsvLine should return false for invalid latitude")
 		}
 	})
@@ -203,9 +202,24 @@ func getSampleCSVData() [][]string {
 
 func TestProcessLines(t *testing.T) {
 	data := getSampleCSVData()
+	// convert raw CSV sample to IOPlace slice
+	var places []IOPlace
+	headerMap := columnHeaderIndexMap(data[0])
+	for _, line := range data[1:] {
+		places = append(places, IOPlace{
+			ID:           line[headerMap[csvId]],
+			Name:         line[headerMap[csvName]],
+			Category:     line[headerMap[csvCategory]],
+			Description:  line[headerMap[csvDescription]],
+			Lat:          line[headerMap[csvLat]],
+			Lon:          line[headerMap[csvLon]],
+			Open:         line[headerMap[csvOpen]],
+			DateVerified: line[headerMap[csvDateVerified]],
+		})
+	}
 	boundaries := map[string]float64{"latMin": 40, "latMax": 60, "lonMin": -130, "lonMax": -110}
 
-	wpts, groups := processLines(data, boundaries)
+	wpts, groups := processLines(places, boundaries)
 
 	if len(wpts) != 2 {
 		t.Errorf("Expected 2 waypoints, got %d", len(wpts))
@@ -244,75 +258,4 @@ func TestConvertIOverlanderToOsmAnd(t *testing.T) {
 	}
 }
 
-func TestParseArguments(t *testing.T) {
-	tests := []struct {
-		name          string
-		args          []string
-		expInfile     string
-		expOutfile    string
-		expBoundaries map[string]float64
-	}{
-		{
-			"No arguments",
-			[]string{"prog"},
-			"none",
-			"none",
-			map[string]float64{},
-		},
-		{
-			"Input and output",
-			[]string{"prog", "-i", "in.csv", "-o", "out.gpx"},
-			"in.csv",
-			"out.gpx",
-			map[string]float64{},
-		},
-		{
-			"Boundaries only",
-			[]string{"prog", "--latMin=50.0", "--latMax=60.0", "--lonMin=-10.0", "--lonMax=10.0"},
-			"none",
-			"none",
-			map[string]float64{"latMin": 50.0, "latMax": 60.0, "lonMin": -10.0, "lonMax": 10.0},
-		},
-		{
-			"Mixed arguments",
-			[]string{"prog", "-i", "in.csv", "--latMin=50.0", "-o", "out.gpx", "--lonMax=10.0"},
-			"in.csv",
-			"out.gpx",
-			map[string]float64{"latMin": 50.0, "lonMax": 10.0},
-		},
-		{
-			"Missing values for flags",
-			[]string{"prog", "-i", "-o"},
-			"none",
-			"none",
-			map[string]float64{},
-		},
-		{
-			"Incomplete flags",
-			[]string{"prog", "-i"},
-			"none",
-			"none",
-			map[string]float64{},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			infile, outfile, boundaries := parseArguments(tc.args)
-			if infile != tc.expInfile {
-				t.Errorf("infile = %q; want %q", infile, tc.expInfile)
-			}
-			if outfile != tc.expOutfile {
-				t.Errorf("outfile = %q; want %q", outfile, tc.expOutfile)
-			}
-			if len(boundaries) != len(tc.expBoundaries) {
-				t.Errorf("boundaries length = %d; want %d", len(boundaries), len(tc.expBoundaries))
-			}
-			for k, v := range tc.expBoundaries {
-				if boundaries[k] != v {
-					t.Errorf("boundary %s = %f; want %f", k, boundaries[k], v)
-				}
-			}
-		})
-	}
-}
+// TestParseArguments is removed as parseArguments was replaced by the flag package.

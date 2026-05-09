@@ -5,17 +5,17 @@ import (
 )
 
 type OAGpx struct {
-	XMLName    xml.Name        `xml:"gpx"`
-	Version    string          `xml:"version,attr"`
-	Creator    string          `xml:"creator,attr"`
-	BaseNS     string          `xml:"xmlns,attr"`
-	OsmNS      string          `xml:"xmlns:osmand,attr"`
-	Namepace   string          `xml:"xmlns:gpxtpx,attr"`
-	Xsi        string          `xml:"xmlns:xsi,attr"`
-	XsiLocaton string          `xml:"xsi:schemaLocation,attr"`
-	Metadata   OAGpxMetadata   `xml:"metadata"`
-	Waypoints  []OAWpt         `xml:"wpt"`
-	Extensions OAGpxExtensions `xml:"extensions"`
+	XMLName     xml.Name        `xml:"gpx"`
+	Version     string          `xml:"version,attr"`
+	Creator     string          `xml:"creator,attr"`
+	BaseNS      string          `xml:"xmlns,attr"`
+	OsmNS       string          `xml:"xmlns:osmand,attr"`
+	Namespace   string          `xml:"xmlns:gpxtpx,attr"`
+	Xsi         string          `xml:"xmlns:xsi,attr"`
+	XsiLocation string          `xml:"xsi:schemaLocation,attr"`
+	Metadata    OAGpxMetadata   `xml:"metadata"`
+	Waypoints   []OAWpt         `xml:"wpt"`
+	Extensions  OAGpxExtensions `xml:"extensions"`
 }
 
 type OAGpxMetadata struct {
@@ -30,24 +30,24 @@ type OAGpxExtensions struct {
 }
 
 type OAWpt struct {
-	XMLName       xml.Name        `xml:"wpt"`
-	WptLat        string          `xml:"lat,attr"`
-	WptLon        string          `xml:"lon,attr"`
-	WptElevaton   string          `xml:"ele"`
-	WptTime       string          `xml:"time"`
-	WptName       string          `xml:"name"`
-	WptDesc       string          `xml:"desc"`
-	WptType       string          `xml:"type"`
-	WptExtensions OAWptExtensions `xml:"extensions"`
+	XMLName     xml.Name        `xml:"wpt"`
+	Lat         string          `xml:"lat,attr"`
+	Lon         string          `xml:"lon,attr"`
+	Elevation   string          `xml:"ele"`
+	Time        string          `xml:"time"`
+	Name        string          `xml:"name"`
+	Description string          `xml:"desc"`
+	Type        string          `xml:"type"`
+	Extensions  OAWptExtensions `xml:"extensions"`
 }
 
 type OAWptExtensions struct {
-	XMLName          xml.Name `xml:"extensions"`
-	WEIcon           string   `xml:"osmand:icon"`
-	WEBackground     string   `xml:"osmand:background"`
-	WEColor          string   `xml:"osmand:color"`
-	WEAmenitySubtype string   `xml:"osmand:amenity_subtype"`
-	WEAmenityType    string   `xml:"osmand:amenity_type"`
+	XMLName        xml.Name `xml:"extensions"`
+	Icon           string   `xml:"osmand:icon"`
+	Background     string   `xml:"osmand:background"`
+	Color          string   `xml:"osmand:color"`
+	AmenitySubtype string   `xml:"osmand:amenity_subtype"`
+	AmenityType    string   `xml:"osmand:amenity_type"`
 }
 
 type OAPointsGroups struct {
@@ -56,11 +56,11 @@ type OAPointsGroups struct {
 }
 
 type OAGroup struct {
-	XMLName     xml.Name `xml:"osmand:group"`
-	GIcon       string   `xml:"icon,attr"`
-	GBackground string   `xml:"background,attr"`
-	GColor      string   `xml:"color,attr"`
-	GName       string   `xml:"name,attr"`
+	XMLName    xml.Name `xml:"osmand:group"`
+	Icon       string   `xml:"icon,attr"`
+	Background string   `xml:"background,attr"`
+	Color      string   `xml:"color,attr"`
+	Name       string   `xml:"name,attr"`
 }
 
 // supportedPOITypes returns a list of POI categories that are officially supported
@@ -78,51 +78,37 @@ func supportedPOITypes() []string {
 	}
 }
 
+type WaypointStyle struct {
+	Icon       string
+	Background string
+	Color      string
+}
+
+var styleMap = map[string]WaypointStyle{
+	"Established Campground": {"tourism_camp_site", "circle", "#339933"},
+	"Informal Campsite":      {"tourism_camp_site", "circle", "#79d279"},
+	"Wild Camping":           {"tourism_camp_site", "circle", "#00ff00"},
+	"Water":                  {"amenity_drinking_water", "circle", "#0099ff"},
+	"Mechanic and Parts":     {"shop_car_repair", "circle", "#9999ff"},
+	"Shopping":               {"shop_supermarket", "circle", "#339933"},
+	"Laundromat":             {"tourism_viewpoint", "circle", "#339933"},
+	"Fuel Station":           {"fuel", "circle", "#339933"},
+}
+
+var defaultStyle = WaypointStyle{
+	Icon:       "tourism_viewpoint",
+	Background: "star",
+	Color:      "#ffff80ff",
+}
+
 // iconBackgroundColorForType maps a POI category to its corresponding OsmAnd
 // icon name, color hex code, and background shape.
 func iconBackgroundColorForType(t string) (string, string, string) {
-	// TODO: Make this configurable and more flexible
-	var icon, background, color string
-	switch t {
-	case "Established Campground":
-		icon = "tourism_camp_site"
-		background = "circle"
-		color = "#339933"
-	case "Informal Campsite":
-		icon = "tourism_camp_site"
-		background = "circle"
-		color = "#79d279"
-	case "Wild Camping":
-		icon = "tourism_camp_site"
-		background = "circle"
-		color = "#00ff00"
-	case "Water":
-		icon = "amenity_drinking_water"
-		background = "circle"
-		color = "#0099ff"
-	case "Mechanic and Parts":
-		icon = "shop_car_repair"
-		background = "circle"
-		color = "#9999ff"
-	case "Shopping":
-		icon = "shop_supermarket"
-		background = "circle"
-		color = "#339933"
-	case "Laundromat":
-		icon = "tourism_viewpoint"
-		background = "circle"
-		color = "#339933"
-	case "Fuel Station":
-		icon = "fuel"
-		background = "circle"
-		color = "#339933"
-	default:
-		// TODO: make this a proper default, e.g. a star or so
-		icon = "tourism_viewpoint"
-		background = "star"
-		color = "#ffff80ff"
+	style, ok := styleMap[t]
+	if !ok {
+		style = defaultStyle
 	}
-	return icon, color, background
+	return style.Icon, style.Color, style.Background
 }
 
 // validateWaypoint checks if a waypoint has all the required fields and valid coordinates.
@@ -131,15 +117,15 @@ func validateWaypoint(wp OAWpt, enforceSupportedTypes bool) bool {
 	// This is likely not complete, but it's a start, better than nothing
 	var wpInSupportedTypes bool = true
 	if enforceSupportedTypes {
-		wpInSupportedTypes = isValueInList(wp.WptType, supportedPOITypes())
+		wpInSupportedTypes = isValueInList(wp.Type, supportedPOITypes())
 	}
-	return validateNotEmptyString(wp.WptName) &&
-		validateNotEmptyString(wp.WptDesc) &&
-		validateNotEmptyString(wp.WptLat) &&
-		validateNotEmptyString(wp.WptLon) &&
-		validateStringParsesToFloat(wp.WptLon) &&
-		validateStringParsesToFloat(wp.WptLat) &&
-		validateNotEmptyString(wp.WptExtensions.WEIcon) &&
-		validateNotEmptyString(wp.WptExtensions.WEColor) &&
+	return validateNotEmptyString(wp.Name) &&
+		validateNotEmptyString(wp.Description) &&
+		validateNotEmptyString(wp.Lat) &&
+		validateStringParsesToFloat(wp.Lat) &&
+		validateNotEmptyString(wp.Lon) &&
+		validateStringParsesToFloat(wp.Lon) &&
+		validateNotEmptyString(wp.Extensions.Icon) &&
+		validateNotEmptyString(wp.Extensions.Color) &&
 		wpInSupportedTypes
 }

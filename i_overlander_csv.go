@@ -52,8 +52,49 @@ const (
 
 const baseUrlForDesc string = "https://ioverlander.com/places/"
 
-// readCvsData opens a CSV file by name and returns its contents as a slice of string slices.
-func readCvsData(filename string) [][]string {
+// IOPlace represents a single waypoint record from iOverlander CSV.
+type IOPlace struct {
+	ID                string
+	Location          string
+	Name              string
+	Category          string
+	Description       string
+	Lat               string
+	Lon               string
+	Altitude          string
+	DateVerified      string
+	Open              string
+	Electricity       string
+	Wifi              string
+	Kitchen           string
+	Parking           string
+	Restaurant        string
+	Showers           string
+	Water             string
+	Toilets           string
+	BigRig            string
+	Tent              string
+	Pets              string
+	Sani              string
+	OutdoorGear       string
+	Groceries         string
+	Artisan           string
+	Bakery            string
+	Rarity            string
+	RepairsVehicle    string
+	RepairsMotorcycle string
+	RepairsBicycle    string
+	SellsParts        string
+	RecyclesBatteries string
+	RecyclesOil       string
+	BioFuel           string
+	EvCharging        string
+	CompostSawdust    string
+	RecycleCenter     string
+}
+
+// readCvsData opens a CSV file by name and returns its contents as a slice of IOPlace.
+func readCvsData(filename string) []IOPlace {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -63,57 +104,118 @@ func readCvsData(filename string) [][]string {
 	return parseCvsData(f)
 }
 
-// parseCvsData reads CSV data from the provided io.Reader and returns it as a slice of string slices.
-func parseCvsData(r io.Reader) [][]string {
+// parseCvsData reads CSV data from the provided io.Reader and returns it as a slice of IOPlace.
+func parseCvsData(r io.Reader) []IOPlace {
 	csvReader := csv.NewReader(r)
 	csvReader.FieldsPerRecord = -1
-	data, err := csvReader.ReadAll()
+	records, err := csvReader.ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return data
+	if len(records) < 2 {
+		return nil
+	}
+
+	headerMap := columnHeaderIndexMap(records[0])
+	var places []IOPlace
+
+	for _, line := range records[1:] {
+		getVal := func(key string) string {
+			if idx, ok := headerMap[key]; ok && idx < len(line) {
+				return line[idx]
+			}
+			return ""
+		}
+
+		places = append(places, IOPlace{
+			ID:                getVal(csvId),
+			Location:          getVal(csvLocation),
+			Name:              getVal(csvName),
+			Category:          getVal(csvCategory),
+			Description:       getVal(csvDescription),
+			Lat:               getVal(csvLat),
+			Lon:               getVal(csvLon),
+			Altitude:          getVal(csvAltitude),
+			DateVerified:      getVal(csvDateVerified),
+			Open:              getVal(csvOpen),
+			Electricity:       getVal(csvElectricity),
+			Wifi:              getVal(csvWifi),
+			Kitchen:           getVal(csvKitchen),
+			Parking:           getVal(csvParking),
+			Restaurant:        getVal(csvRestaurant),
+			Showers:           getVal(csvShowers),
+			Water:             getVal(csvWater),
+			Toilets:           getVal(csvToilets),
+			BigRig:            getVal(csvBigRig),
+			Tent:              getVal(csvTent),
+			Pets:              getVal(csvPets),
+			Sani:              getVal(csvSani),
+			OutdoorGear:       getVal(csvOutdoorGear),
+			Groceries:         getVal(csvGroceries),
+			Artisan:           getVal(csvArtisan),
+			Bakery:            getVal(csvBakery),
+			Rarity:            getVal(csvRarity),
+			RepairsVehicle:    getVal(csvRepairsVehicle),
+			RepairsMotorcycle: getVal(csvRepairsMotorcycle),
+			RepairsBicycle:    getVal(csvRepairsBicycle),
+			SellsParts:        getVal(csvSellsParts),
+			RecyclesBatteries: getVal(csvRecyclesBatteries),
+			RecyclesOil:       getVal(csvRecyclesOil),
+			BioFuel:           getVal(csvBioFuel),
+			EvCharging:        getVal(csvEvCharging),
+			CompostSawdust:    getVal(csvCompostSawdust),
+			RecycleCenter:     getVal(csvRecycleCenter),
+		})
+	}
+
+	return places
 }
 
-// validateCsvLine checks if a CSV line contains all the required fields and that coordinates are valid floats.
-func validateCsvLine(line []string, columnIndexMap map[string]int) bool {
+// validateCsvLine checks if an IOPlace contains all the required fields and that coordinates are valid floats.
+func validateCsvLine(p IOPlace) bool {
 	// Probably neither great nor complete, but it's a start and I can
 	// add more validation as problem cases arise
-	return validateNotEmptyString(line[columnIndexMap[csvName]]) &&
-		validateNotEmptyString(line[columnIndexMap[csvDescription]]) &&
-		validateNotEmptyString(line[columnIndexMap[csvLat]]) &&
-		validateStringParsesToFloat(line[columnIndexMap[csvLat]]) &&
-		validateNotEmptyString(line[columnIndexMap[csvLon]]) &&
-		validateStringParsesToFloat(line[columnIndexMap[csvLon]]) &&
-		validateNotEmptyString(line[columnIndexMap[csvCategory]])
-}
-
-// descriptionFieldsForCategory returns a list of CSV column names that should be included in the
-// waypoint description based on the category of the point of interest.
-func descriptionFieldsForCategory(category string) []string {
-	if isValueInList(category, []string{"Informal Campsite", "Established Campground", "Wild Camping"}) {
-		return []string{
-			csvDateVerified, csvOpen, csvElectricity, csvWifi, csvKitchen, csvParking,
-			csvRestaurant, csvShowers, csvWater, csvToilets, csvBigRig, csvTent, csvPets, csvSani,
-		}
-	}
-	// Default values
-	return []string{csvDateVerified, csvOpen}
+	return validateNotEmptyString(p.Name) &&
+		validateNotEmptyString(p.Description) &&
+		validateNotEmptyString(p.Lat) &&
+		validateStringParsesToFloat(p.Lat) &&
+		validateNotEmptyString(p.Lon) &&
+		validateStringParsesToFloat(p.Lon) &&
+		validateNotEmptyString(p.Category)
 }
 
 // createDescription constructs a detailed description string for a waypoint, including
 // category-specific fields and a link back to the iOverlander website.
-func createDescription(line []string, columnIndexMap map[string]int) string {
+func createDescription(p IOPlace) string {
 	var desc string
-	desc = line[columnIndexMap[csvDescription]] + "\n\n"
+	desc = p.Description + "\n\n"
 
-	fieldListForCategory := descriptionFieldsForCategory(line[columnIndexMap[csvCategory]])
-	for _, f := range fieldListForCategory {
-		if line[columnIndexMap[f]] != "" {
-			desc += f + ": " + line[columnIndexMap[f]] + "\n"
+	if isValueInList(p.Category, []string{"Informal Campsite", "Established Campground", "Wild Camping"}) {
+		fields := []struct {
+			name  string
+			value string
+		}{
+			{csvDateVerified, p.DateVerified}, {csvOpen, p.Open}, {csvElectricity, p.Electricity},
+			{csvWifi, p.Wifi}, {csvKitchen, p.Kitchen}, {csvParking, p.Parking},
+			{csvRestaurant, p.Restaurant}, {csvShowers, p.Showers}, {csvWater, p.Water},
+			{csvToilets, p.Toilets}, {csvBigRig, p.BigRig}, {csvTent, p.Tent},
+			{csvPets, p.Pets}, {csvSani, p.Sani},
+		}
+		for _, f := range fields {
+			if f.value != "" {
+				desc += f.name + ": " + f.value + "\n"
+			}
+		}
+	} else {
+		if p.DateVerified != "" {
+			desc += csvDateVerified + ": " + p.DateVerified + "\n"
+		}
+		if p.Open != "" {
+			desc += csvOpen + ": " + p.Open + "\n"
 		}
 	}
-	desc += "\n" + baseUrlForDesc + line[columnIndexMap[csvId]] + " (network required)" + "\n"
+	desc += "\n" + baseUrlForDesc + p.ID + " (network required)" + "\n"
 
 	return desc
 }

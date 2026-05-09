@@ -3,8 +3,8 @@
 package main
 
 import (
+	"fmt"
 	"io"
-	"log"
 	"os"
 	"slices"
 )
@@ -14,34 +14,31 @@ func isValueInList(value string, list []string) bool {
 	return slices.Contains(list, value)
 }
 
-// writeToWriter writes a byte slice to the provided io.Writer and panics on error.
-func writeToWriter(w io.Writer, b []byte) {
+// writeToWriter writes a byte slice to the provided io.Writer.
+func writeToWriter(w io.Writer, b []byte) error {
 	_, err := w.Write(b)
-	panicOnError(err)
+	return err
 }
 
-// writeToFile writes a byte slice to a file. If filename is "none", it writes to standard output.
-func writeToFile(b []byte, filename string) {
-	if filename == "none" {
-		writeToWriter(os.Stdout, b)
+// writeToFile writes a byte slice to a file. If filename is empty, it writes to standard output.
+func writeToFile(b []byte, filename string) error {
+	if filename == "" {
+		return writeToWriter(os.Stdout, b)
 	} else {
 		f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-		panicOnError(err)
+		if err != nil {
+			return err
+		}
 		defer f.Close()
-		writeToWriter(f, b)
+		return writeToWriter(f, b)
 	}
 }
 
-// panicOnError panics if the provided error is not nil.
-func panicOnError(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
+// Removed panicOnError in favor of returning errors to the caller.
 
 // coordinateBoundaries resolves the geographic bounding box from the provided map.
 // It uses default world boundaries if specific boundaries are not provided or are 0.0.
-func coordinateBoundaries(boundaries map[string]float64) (float64, float64, float64, float64) {
+func coordinateBoundaries(boundaries map[string]float64) (float64, float64, float64, float64, error) {
 	lonMin, lonMax, latMin, latMax := -180.0, 180.0, -90.0, 90.0
 	if boundaries["lonMin"] != 0.0 {
 		lonMin = boundaries["lonMin"]
@@ -58,8 +55,7 @@ func coordinateBoundaries(boundaries map[string]float64) (float64, float64, floa
 
 	r, message := validateCoordinateBoundaries(lonMin, lonMax, latMin, latMax)
 	if !r {
-		log.Fatal("Coordinates invalid\n")
-		log.Fatal(message)
+		return 0, 0, 0, 0, fmt.Errorf("coordinates invalid: %s", message)
 	}
-	return lonMin, lonMax, latMin, latMax
+	return lonMin, lonMax, latMin, latMax, nil
 }
