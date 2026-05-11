@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"io"
 	"log"
+	"strings"
 )
 
 // Constants for CSV fields, these need to match the column headers
@@ -176,8 +177,9 @@ func validateCsvLine(p IOPlace) bool {
 // createDescription constructs a detailed description string for a waypoint, including
 // category-specific fields and a link back to the iOverlander website.
 func createDescription(p IOPlace) string {
-	var desc string
-	desc = p.Description + "\n\n"
+	var sb strings.Builder
+	sb.WriteString(p.Description)
+	sb.WriteString("\n\n")
 
 	if isValueInList(p.Category, []string{"Informal Campsite", "Established Campground", "Wild Camping"}) {
 		fields := []struct {
@@ -192,20 +194,33 @@ func createDescription(p IOPlace) string {
 		}
 		for _, f := range fields {
 			if f.value != "" {
-				desc += f.name + ": " + f.value + "\n"
+				sb.WriteString(f.name)
+				sb.WriteString(": ")
+				sb.WriteString(f.value)
+				sb.WriteString("\n")
 			}
 		}
 	} else {
 		if p.DateVerified != "" {
-			desc += csvDateVerified + ": " + p.DateVerified + "\n"
+			sb.WriteString(csvDateVerified)
+			sb.WriteString(": ")
+			sb.WriteString(p.DateVerified)
+			sb.WriteString("\n")
 		}
 		if p.Open != "" {
-			desc += csvOpen + ": " + p.Open + "\n"
+			sb.WriteString(csvOpen)
+			sb.WriteString(": ")
+			sb.WriteString(p.Open)
+			sb.WriteString("\n")
 		}
 	}
-	desc += "\n" + baseUrlForDesc + p.ID + " (network required)" + "\n"
+	sb.WriteString("\n")
+	sb.WriteString(baseUrlForDesc)
+	sb.WriteString(p.ID)
+	sb.WriteString(" (network required)")
+	sb.WriteString("\n")
 
-	return desc
+	return sb.String()
 }
 
 // columnHeaderIndexMap creates a mapping from CSV column headers to their respective column indices.

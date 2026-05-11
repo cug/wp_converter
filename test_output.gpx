@@ -2,7 +2,7 @@
 <gpx version="OsmAnd 4.6.6" creator="OsmAnd Maps 4.6.6 (4.6.6.1)" xmlns="https://www.topografix.com/GPX/1/1/" xmlns:osmand="https://osmand.net" xmlns:gpxtpx="https://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://www.topografix.com/GPX/1/1/gpx.xsd">
  <metadata>
   <name>favorites</name>
-  <time>1970-01-01T08:00:00Z</time>
+  <time>2026-05-11T03:46:33Z</time>
  </metadata>
  <wpt lat="51.853197" lon="-121.347730">
   <ele>0.0</ele>
@@ -125880,15 +125880,15 @@
  </wpt>
  <extensions>
   <osmand:points_groups>
-   <osmand:group icon="shop_supermarket" background="circle" color="#339933" name="Shopping"></osmand:group>
-   <osmand:group icon="amenity_drinking_water" background="circle" color="#0099ff" name="Water"></osmand:group>
-   <osmand:group icon="tourism_viewpoint" background="star" color="#ffff80ff" name="Showers"></osmand:group>
-   <osmand:group icon="tourism_viewpoint" background="circle" color="#339933" name="Laundromat"></osmand:group>
-   <osmand:group icon="fuel" background="circle" color="#339933" name="Fuel Station"></osmand:group>
    <osmand:group icon="tourism_camp_site" background="circle" color="#339933" name="Established Campground"></osmand:group>
+   <osmand:group icon="fuel" background="circle" color="#339933" name="Fuel Station"></osmand:group>
    <osmand:group icon="tourism_camp_site" background="circle" color="#79d279" name="Informal Campsite"></osmand:group>
-   <osmand:group icon="tourism_camp_site" background="circle" color="#00ff00" name="Wild Camping"></osmand:group>
+   <osmand:group icon="tourism_viewpoint" background="circle" color="#339933" name="Laundromat"></osmand:group>
    <osmand:group icon="shop_car_repair" background="circle" color="#9999ff" name="Mechanic and Parts"></osmand:group>
+   <osmand:group icon="shop_supermarket" background="circle" color="#339933" name="Shopping"></osmand:group>
+   <osmand:group icon="tourism_viewpoint" background="star" color="#ffff80ff" name="Showers"></osmand:group>
+   <osmand:group icon="amenity_drinking_water" background="circle" color="#0099ff" name="Water"></osmand:group>
+   <osmand:group icon="tourism_camp_site" background="circle" color="#00ff00" name="Wild Camping"></osmand:group>
   </osmand:points_groups>
  </extensions>
 </gpx>
