@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"io"
 	"log"
-	"os"
 )
 
 // Constants for CSV fields, these need to match the column headers
@@ -91,17 +90,6 @@ type IOPlace struct {
 	EvCharging        string
 	CompostSawdust    string
 	RecycleCenter     string
-}
-
-// readCvsData opens a CSV file by name and returns its contents as a slice of IOPlace.
-func readCvsData(filename string) []IOPlace {
-	f, err := os.Open(filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	return parseCvsData(f)
 }
 
 // parseCvsData reads CSV data from the provided io.Reader and returns it as a slice of IOPlace.

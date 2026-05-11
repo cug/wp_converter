@@ -40,17 +40,17 @@ func writeToFile(b []byte, filename string) error {
 // It uses default world boundaries if specific boundaries are not provided or are 0.0.
 func coordinateBoundaries(boundaries map[string]float64) (float64, float64, float64, float64, error) {
 	lonMin, lonMax, latMin, latMax := -180.0, 180.0, -90.0, 90.0
-	if boundaries["lonMin"] != 0.0 {
-		lonMin = boundaries["lonMin"]
+	if v, ok := boundaries["lonMin"]; ok {
+		lonMin = v
 	}
-	if boundaries["lonMax"] != 0.0 {
-		lonMax = boundaries["lonMax"]
+	if v, ok := boundaries["lonMax"]; ok {
+		lonMax = v
 	}
-	if boundaries["latMin"] != 0.0 {
-		latMin = boundaries["latMin"]
+	if v, ok := boundaries["latMin"]; ok {
+		latMin = v
 	}
-	if boundaries["latMax"] != 0.0 {
-		latMax = boundaries["latMax"]
+	if v, ok := boundaries["latMax"]; ok {
+		latMax = v
 	}
 
 	r, message := validateCoordinateBoundaries(lonMin, lonMax, latMin, latMax)

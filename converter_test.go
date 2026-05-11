@@ -48,6 +48,21 @@ func TestCoordinateBoundaries(t *testing.T) {
 			map[string]float64{"lonMin": -10, "lonMax": 10, "latMin": 40, "latMax": 50},
 			[4]float64{-10.0, 10.0, 40.0, 50.0},
 		},
+		{
+			"Zero longitude boundaries (prime meridian)",
+			map[string]float64{"lonMin": 0.0, "lonMax": 10.0},
+			[4]float64{0.0, 10.0, -90.0, 90.0},
+		},
+		{
+			"Zero latitude boundary (equator)",
+			map[string]float64{"latMin": 0.0, "latMax": 45.0},
+			[4]float64{-180.0, 180.0, 0.0, 45.0},
+		},
+		{
+			"All zero boundaries",
+			map[string]float64{"lonMin": 0.0, "lonMax": 0.0, "latMin": 0.0, "latMax": 0.0},
+			[4]float64{0.0, 0.0, 0.0, 0.0},
+		},
 	}
 
 	for _, tc := range tests {
@@ -249,10 +264,6 @@ func TestConvertIOverlanderToOsmAnd(t *testing.T) {
 	if !strings.Contains(result, "Name1") || !strings.Contains(result, "Name2") {
 		t.Errorf("Result missing waypoint names: %q", result)
 	}
-	if !strings.Contains(result, "osmand:points_groups") {
-		t.Errorf("Result missing OsmAnd extensions: %q", result)
-	}
-
 	if !strings.Contains(result, "osmand:points_groups") {
 		t.Errorf("Result missing OsmAnd extensions: %q", result)
 	}

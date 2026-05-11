@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"sort"
 	"strconv"
+	"time"
 )
 
 // convertIOverlanderToOsmAnd reads CSV data from r, processes it into waypoints
@@ -26,7 +28,7 @@ func convertIOverlanderToOsmAnd(r io.Reader, w io.Writer, mapBoundaries map[stri
 		Waypoints:   waypoints,
 		Metadata: OAGpxMetadata{
 			Name:   "favorites",
-			GMTime: "1970-01-01T08:00:00Z",
+			GMTime: time.Now().UTC().Format(time.RFC3339),
 		},
 		Extensions: OAGpxExtensions{
 			PointsGroups: OAPointsGroups{
@@ -64,8 +66,16 @@ func processLines(data []IOPlace, mapBoundaries map[string]float64) ([]OAWpt, []
 
 	for _, p := range data {
 		if validateCsvLine(p) {
-			currentLineLon, _ := strconv.ParseFloat(p.Lon, 64)
-			currentLineLat, _ := strconv.ParseFloat(p.Lat, 64)
+			currentLineLon, err := strconv.ParseFloat(p.Lon, 64)
+			if err != nil {
+				log.Printf("Skipping waypoint %q: invalid longitude %q", p.Name, p.Lon)
+				continue
+			}
+			currentLineLat, err := strconv.ParseFloat(p.Lat, 64)
+			if err != nil {
+				log.Printf("Skipping waypoint %q: invalid latitude %q", p.Name, p.Lat)
+				continue
+			}
 			if currentLineLon > lonMin && currentLineLon < lonMax &&
 				currentLineLat > latMin && currentLineLat < latMax {
 				wp := convertCsvLineToWaypoint(p)
@@ -92,7 +102,12 @@ func processLines(data []IOPlace, mapBoundaries map[string]float64) ([]OAWpt, []
 	}
 
 	var groups []OAGroup
+	categories := make([]string, 0, len(categoryMap))
 	for category := range categoryMap {
+		categories = append(categories, category)
+	}
+	sort.Strings(categories)
+	for _, category := range categories {
 		groups = append(groups, categoryMap[category])
 	}
 	return waypoints, groups
@@ -107,7 +122,6 @@ func convertCsvLineToWaypoint(p IOPlace) OAWpt {
 
 	// make places, that aren't open have grey symbols
 	if p.Open != "Yes" {
-		fmt.Println("Setting line color to grey")
 		color = "#aaaaaa"
 	}
 
